@@ -10,82 +10,6 @@ from googleapiclient.http import MediaIoBaseDownload
 import io
 import time
 
-# ── HERO SECTION ─────────────────────────────────────────────
-st.markdown(f"""
-<div class="hero-container">
-
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-
-        <div>
-
-            <div class="hero-badge">
-                ⚡ AI Monitoring Active
-            </div>
-
-            <div class="hero-live">
-                ● LIVE SYSTEM
-            </div>
-
-            <div class="hero-title">
-                Predictive Maintenance Platform
-            </div>
-
-            <div class="hero-subtitle">
-                Real-Time SUTM Asset Intelligence & Risk Monitoring System
-                <br>
-                PT PLN UP3 Bandung · Industrial AI Analytics
-            </div>
-
-        </div>
-
-        <div style="
-            background:rgba(255,255,255,0.04);
-            border:1px solid rgba(255,255,255,0.08);
-            padding:18px 22px;
-            border-radius:18px;
-            min-width:220px;
-        ">
-
-            <div style="color:#94a3b8;font-size:13px;margin-bottom:8px;">
-                SYSTEM STATUS
-            </div>
-
-            <div style="
-                color:#10b981;
-                font-size:20px;
-                font-weight:700;
-                margin-bottom:6px;
-            ">
-                ● Operational
-            </div>
-
-            <div style="color:#94a3b8;font-size:13px;">
-                Last Update:
-            </div>
-
-            <div style="color:white;font-size:14px;font-weight:600;">
-                {last_update}
-            </div>
-
-            <div style="margin-top:14px;color:#94a3b8;font-size:13px;">
-                Connected Assets
-            </div>
-
-            <div style="
-                color:white;
-                font-size:28px;
-                font-weight:800;
-            ">
-                {total:,}
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-""", unsafe_allow_html=True)
-
 # ── CUSTOM CSS ───────────────────────────────────────────────
 st.markdown("""
 <style>
@@ -365,8 +289,81 @@ last_update = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
 
 # ── OVERVIEW ─────────────────────────────────────────────────
 if page == "📊 Overview":
-    st.title("⚡ Predictive Maintenance SUTM")
-    st.caption(f"آخر تحديث: {last_update} · {total:,} تيانج فريد")
+# ── HERO SECTION ─────────────────────────────────────────────
+st.markdown(f"""
+<div class="hero-container">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+
+        <div>
+
+            <div class="hero-badge">
+                ⚡ AI Monitoring Active
+            </div>
+
+            <div class="hero-live">
+                ● LIVE SYSTEM
+            </div>
+
+            <div class="hero-title">
+                Predictive Maintenance Platform
+            </div>
+
+            <div class="hero-subtitle">
+                Real-Time SUTM Asset Intelligence & Risk Monitoring System
+                <br>
+                PT PLN UP3 Bandung · Industrial AI Analytics
+            </div>
+
+        </div>
+
+        <div style="
+            background:rgba(255,255,255,0.04);
+            border:1px solid rgba(255,255,255,0.08);
+            padding:18px 22px;
+            border-radius:18px;
+            min-width:220px;
+        ">
+
+            <div style="color:#94a3b8;font-size:13px;margin-bottom:8px;">
+                SYSTEM STATUS
+            </div>
+
+            <div style="
+                color:#10b981;
+                font-size:20px;
+                font-weight:700;
+                margin-bottom:6px;
+            ">
+                ● Operational
+            </div>
+
+            <div style="color:#94a3b8;font-size:13px;">
+                Last Update:
+            </div>
+
+            <div style="color:white;font-size:14px;font-weight:600;">
+                {last_update}
+            </div>
+
+            <div style="margin-top:14px;color:#94a3b8;font-size:13px;">
+                Connected Assets
+            </div>
+
+            <div style="
+                color:white;
+                font-size:28px;
+                font-weight:800;
+            ">
+                {total:,}
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+""", unsafe_allow_html=True)
 
     # KPIs
     c1, c2, c3, c4, c5 = st.columns(5)
