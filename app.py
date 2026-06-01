@@ -11,31 +11,93 @@ import io
 import time
 
 # ── PAGE CONFIG ──────────────────────────────────────────────
-st.set_page_config(
-    page_title="Predictive Maintenance SUTM",
-    page_icon="⚡",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.markdown(f"""
+<div class="hero-container">
+
+<div class="hero-badge">
+⚡ AI Monitoring Active
+</div>
+
+<div class="hero-live">
+● LIVE SYSTEM
+</div>
+
+<div class="hero-title">
+Predictive Maintenance Platform
+</div>
+
+<div class="hero-subtitle">
+Real-Time SUTM Asset Intelligence & Risk Monitoring System<br>
+PT PLN UP3 Bandung · Industrial AI Analytics
+</div>
+
+<div style="margin-top:18px;color:#94a3b8;font-size:14px;">
+آخر تحديث: {last_update} ·
+{total:,} Unique Poles Connected
+</div>
+
+</div>
+""", unsafe_allow_html=True)
 
 # ── CUSTOM CSS ───────────────────────────────────────────────
 st.markdown("""
 <style>
-    .main { background-color: #0a0c10; }
-    .stMetric { background: #0f1218; border: 1px solid rgba(255,255,255,0.07);
-                border-radius: 12px; padding: 16px; }
-    .metric-critical { color: #ff4757 !important; }
-    .metric-high     { color: #ffa502 !important; }
-    .metric-medium   { color: #3d8eff !important; }
-    .metric-low      { color: #00d4aa !important; }
-    [data-testid="stSidebar"] { background-color: #0f1218; }
-    .stPlotlyChart   { border-radius: 12px; }
-    div[data-testid="metric-container"] {
-        background: #0f1218;
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 12px;
-        padding: 16px;
-    }
+.hero-container{
+    background: linear-gradient(135deg,#111827 0%,#0f172a 50%,#020617 100%);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:24px;
+    padding:32px;
+    margin-bottom:24px;
+    position:relative;
+    overflow:hidden;
+}
+
+.hero-container::before{
+    content:'';
+    position:absolute;
+    width:400px;
+    height:400px;
+    background:radial-gradient(circle,#3b82f633 0%,transparent 70%);
+    top:-180px;
+    right:-120px;
+}
+
+.hero-title{
+    font-size:52px;
+    font-weight:800;
+    line-height:1.1;
+    color:white;
+    margin-bottom:12px;
+}
+
+.hero-subtitle{
+    font-size:18px;
+    color:#94a3b8;
+    margin-bottom:24px;
+}
+
+.hero-badge{
+    display:inline-block;
+    background:rgba(16,185,129,0.15);
+    color:#10b981;
+    border:1px solid rgba(16,185,129,0.25);
+    padding:8px 16px;
+    border-radius:999px;
+    font-size:14px;
+    font-weight:600;
+    margin-right:12px;
+}
+
+.hero-live{
+    display:inline-block;
+    background:rgba(59,130,246,0.15);
+    color:#60a5fa;
+    border:1px solid rgba(59,130,246,0.25);
+    padding:8px 16px;
+    border-radius:999px;
+    font-size:14px;
+    font-weight:600;
+}
 </style>
 """, unsafe_allow_html=True)
 
