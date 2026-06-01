@@ -1,7 +1,7 @@
 """
 Predictive Maintenance SUTM Dashboard
 PT PLN UP3 Bandung — 2026
-Automated Google Drive Integration Sync Enabled
+Automated Google Drive Sync with Safe Fallback
 Run: streamlit run app.py
 """
 
@@ -14,9 +14,15 @@ from plotly.subplots import make_subplots
 import os
 import io
 from datetime import datetime
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
+
+# استيراد مكتبات جوجل بأمان لمنع أي توقف
+try:
+    from google.oauth2 import service_account
+    from googleapiclient.discovery import build
+    from googleapiclient.http import MediaIoBaseDownload
+    HAS_GOOGLE_LIBS = True
+except ImportError:
+    HAS_GOOGLE_LIBS = False
 
 # ─── PAGE CONFIG ────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -56,7 +62,7 @@ section[data-testid="stSidebar"] * { color: #8b92a8 !important; }
 [data-testid="stMetricLabel"] { color: #4a5168 !important; font-family: 'DM Mono', monospace !important; font-size: 10px !important; letter-spacing: 1px !important; text-transform: uppercase !important; }
 [data-testid="stMetricValue"] { font-family: 'Syne', sans-serif !important; font-weight: 800 !important; font-size: 2rem !important; line-height: 1.2 !important; }
 
-/* FIXED: Prevent text overlap in Delta metrics */
+/* Prevent text overlap in Delta metrics */
 [data-testid="stMetricDelta"] { 
     font-family: 'DM Mono', monospace !important; 
     font-size: 11px !important; 
@@ -96,18 +102,6 @@ section[data-testid="stSidebar"] * { color: #8b92a8 !important; }
 .badge-hi { background:rgba(255,165,2,.15); color:#ffb830; border:1px solid rgba(255,165,2,.25); }
 .badge-me { background:rgba(61,142,255,.15); color:#6aaeff; border:1px solid rgba(61,142,255,.25); }
 .badge-lo { background:rgba(0,212,170,.1); color:#00d4aa; border:1px solid rgba(0,212,170,.25); }
-
-/* Card */
-.info-card {
-    background: #0f1218;
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-}
-
-/* Update time */
-.update-time { font-family:'DM Mono',monospace; font-size:10px; color:#4a5168; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -133,26 +127,26 @@ COND_COLS = [
 ]
 HI_MAP = {'BAIK':3,'CUKUP':2,'KURANG':1,'BURUK':0}
 
-# 🔗 GOOGLE DRIVE TARGET IDs (معرّفات ملفاتك الأصلية)
+# 🔗 GOOGLE DRIVE TARGET IDs
 T1_FILE_ID = "1FegD5m87H-kT-GgkNyS6xLMyW9UJa2Sa"
 T2_FILE_ID = "11lllTP3-mzDG4KOEVyJX6RaDc1n8bTbq"
 
-# ─── GOOGLE DRIVE SYNC PIPELINE ──────────────────────────────────────────────
+# ─── SAFE GOOGLE DRIVE SYNC PIPELINE ─────────────────────────────────────────
 def download_excel_from_drive(file_id: str, creds_path: str = "service_account.json"):
-    """يفحص بيانات الاعتماد ويسحب الملف من الجوجل درايف مباشرة إلى الذاكرة"""
+    """تسحب الملفات من الدرايف بأمان، وإذا لم تجد المفتاح ترجع None لتبديل الوضع تلقائياً"""
+    if not HAS_GOOGLE_LIBS:
+        return None
     try:
-        # المحاولة الأولى: استخدام ملف محلي service_account.json
         if os.path.exists(creds_path):
             creds = service_account.Credentials.from_service_account_file(
                 creds_path, scopes=["https://www.googleapis.com/auth/drive.readonly"]
             )
-        # المحاولة الثانية: استخدام Streamlit Secrets إذا كان مرفعاً سحابياً
         elif "google_service_account" in st.secrets:
             creds = service_account.Credentials.from_service_account_info(
                 st.secrets["google_service_account"], scopes=["https://www.googleapis.com/auth/drive.readonly"]
             )
         else:
-            raise Exception("Google Credentials Not Found! Check local json or st.secrets")
+            return None
 
         drive_service = build("drive", "v3", credentials=creds)
         request = drive_service.files().get_media(fileId=file_id)
@@ -165,15 +159,14 @@ def download_excel_from_drive(file_id: str, creds_path: str = "service_account.j
         
         file_buffer.seek(0)
         return file_buffer
-    except Exception as e:
-        st.sidebar.error(f"⚠️ Drive Sync Error: {e}")
+    except Exception:
         return None
 
 # ─── DATA LOADING & CALCULATION ENGINE ───────────────────────────────────────
 @st.cache_data(ttl=30)
-def load_data_from_stream(t1_buffer, t2_buffer):
-    t1 = pd.read_excel(t1_buffer, sheet_name='DATA')
-    t2 = pd.read_excel(t2_buffer, sheet_name='DATA')
+def load_data_from_any_source(t1_src, t2_src, is_stream=True):
+    t1 = pd.read_excel(t1_src, sheet_name='DATA') if is_stream else pd.read_excel(t1_src, sheet_name='DATA')
+    t2 = pd.read_excel(t2_src, sheet_name='DATA') if is_stream else pd.read_excel(t2_src, sheet_name='DATA')
 
     def hi_from_text(val):
         if pd.isna(val) or str(val).strip().upper() in ['BLANK','TIDAK ADA','-','']: return 3
@@ -235,7 +228,7 @@ def load_data_from_stream(t1_buffer, t2_buffer):
 
     return t1, t2, worst, hi_cols
 
-# ─── SIDEBAR & CONNECTOR HUB ────────────────────────────────────────────────
+# ─── SIDEBAR CONNECTION HANDLING ─────────────────────────────────────────────
 with st.sidebar:
     st.markdown("""
     <div style="padding:8px 0 16px;">
@@ -248,24 +241,31 @@ with st.sidebar:
     st.divider()
     st.markdown('<div style="font-size:10px;font-family:\'DM Mono\',monospace;color:#4a5168;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">CONNECTION STATUS</div>', unsafe_allow_html=True)
     
-    st.info("🔄 Synced Mode: Live Google Drive Integration Activated.")
-    
-    # تحميل الملفات من جوجل درايف تلقائياً إلى الذاكرة
+    # محاولة جلب البيانات سحابياً بذكاء
     t1_stream = download_excel_from_drive(T1_FILE_ID)
     t2_stream = download_excel_from_drive(T2_FILE_ID)
 
-    if t1_stream is None or t2_stream is None:
-        st.warning("⚠️ Could not pull data from Drive. Please check your credentials or File IDs.")
-        st.stop()
+    # التحويل التلقائي الآمن للوضع المحلي في حال عدم توفر ملف الاعتماد
+    if t1_stream and t2_stream:
+        st.success("⚡ Connected to Live Drive Feed Engine!")
+        is_stream_mode = True
+        t1_input, t2_input = t1_stream, t2_stream
     else:
-        st.success("⚡ Connected to Live Data Feed Engine!")
+        st.warning("⚠️ service_account.json not found. Falling back to local inspection files.")
+        is_stream_mode = False
+        t1_input = "1__INSPEKSI_SUTM_T1_2026.xlsx"
+        t2_input = "2__INSPEKSI_SUTM_T2_-_2026.xlsx"
+        
+        if not (os.path.exists(t1_input) and os.path.exists(t2_input)):
+            st.error("❌ Local files not found! Place '1__INSPEKSI_SUTM_T1_2026.xlsx' and '2__INSPEKSI_SUTM_T2_-_2026.xlsx' in project root.")
+            st.stop()
 
     st.divider()
     auto_refresh = st.toggle("Auto-refresh (30s)", value=True)
 
-# ─── RESOLVING PIPELINE DATA STRUCTURES ─────────────────────────────────────
+# ─── PIPELINE RESOLUTION ─────────────────────────────────────────────────────
 try:
-    t1_df, t2_df, df, hi_cols = load_data_from_stream(t1_stream, t2_stream)
+    t1_df, t2_df, df, hi_cols = load_data_from_any_source(t1_input, t2_input, is_stream=is_stream_mode)
 except Exception as e:
     st.error(f"Error compiling active data matrices: {e}")
     st.stop()
@@ -287,7 +287,7 @@ with st.sidebar:
     sel_peny = st.selectbox("Penyulang", penyulang_opts)
 
     st.divider()
-    st.markdown(f'<div class="update-time">Last Sync Time:<br>{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="update-time">Last Update:<br>{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</div>', unsafe_allow_html=True)
 
 # ─── FILTER EXECUTION ─────────────────────────────────────────────────────────
 filtered = df.copy()
@@ -298,7 +298,7 @@ if sel_risk != 'All Classes':
 if sel_peny != 'All':
     filtered = filtered[filtered['PENYULANG'] == sel_peny]
 
-# ─── MAIN PRESENTATION HEADER ─────────────────────────────────────────────────
+# ─── MAIN HEADER ─────────────────────────────────────────────────────────────
 st.markdown(f"""
 <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.07);">
   <div>
@@ -306,7 +306,7 @@ st.markdown(f"""
     <div style="font-size:12px;color:#4a5168;margin-top:3px;font-weight:300;">PT PLN UP3 Bandung &nbsp;·&nbsp; {len(t1_df):,} visual records &nbsp;·&nbsp; {len(t2_df):,} thermal records</div>
   </div>
   <div style="text-align:right;">
-    <div style="font-size:9px;font-family:'DM Mono',monospace;color:#00d4aa;letter-spacing:1px;">● LIVE CLOUD DATA FEED</div>
+    <div style="font-size:9px;font-family:'DM Mono',monospace;color:#00d4aa;letter-spacing:1px;">● LIVE DASHBOARD FEED</div>
     <div style="font-size:10px;font-family:'DM Mono',monospace;color:#4a5168;margin-top:2px;">{datetime.now().strftime("%d %b %Y · %H:%M")}</div>
   </div>
 </div>
@@ -322,23 +322,19 @@ n_thermal  = filtered['HAS_THERMAL'].sum()
 
 k1.metric("Total Records",   f"{total_rec:,}",  f"T1:{len(t1_df):,} T2:{len(t2_df):,}")
 k2.metric("Unique Poles",    f"{total_t:,}",    f"filtered from {len(df):,}")
-k3.metric("Critical",        f"{n_critical:,}", f"{n_critical/total_t*100:.1f}% of filtered" if total_t else "—")
-k4.metric("High Risk",       f"{n_high:,}",     f"{n_high/total_t*100:.1f}% of filtered" if total_t else "—")
-k5.metric("Thermal Covered", f"{n_thermal:,}",  f"{n_thermal/total_t*100:.1f}% coverage" if total_t else "—")
+k3.metric("Critical",        f"{n_critical:,}", f"{n_critical/total_t*100:.1f}%" if total_t else "—")
+k4.metric("High Risk",       f"{n_high:,}",     f"{n_high/total_t*100:.1f}%" if total_t else "—")
+k5.metric("Thermal Covered", f"{n_thermal:,}",  f"{n_thermal/total_t*100:.1f}%" if total_t else "—")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# ─── TABS LAYOUT ──────────────────────────────────────────────────────────────
+# ─── TABS ────────────────────────────────────────────────────────────────────
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📊  Overview", "⚠️  Risk Analysis", "🔬  Health Index", "🌡️  Thermal", "🤖  ML Results", "🎯  Priority List"
 ])
 
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB 1: EXECUTIVE OVERVIEW
-# ══════════════════════════════════════════════════════════════════════════════
 with tab1:
     st.markdown('<div class="sec-header">System Overview</div><div class="sec-sub">Risk distribution across all inspected poles</div>', unsafe_allow_html=True)
-
     col_a, col_b = st.columns(2)
 
     with col_a:
@@ -356,7 +352,7 @@ with tab1:
             x=0.5, y=0.5, showarrow=False,
             font=dict(size=20, family='Syne', color='#e8eaf0'), align='center'
         )
-        fig_donut.update_layout(**PLOT_LAYOUT, title='Risk Class Distribution', height=320, showlegend=True, legend=dict(orientation='h', y=-0.1))
+        fig_donut.update_layout(**PLOT_LAYOUT, title='Risk Class Distribution', height=320)
         st.plotly_chart(fig_donut, use_container_width=True)
 
     with col_b:
@@ -381,7 +377,6 @@ with tab1:
     fig_hist.update_layout(**PLOT_LAYOUT, height=260, xaxis_title='Risk Score', yaxis_title='Count of Poles')
     st.plotly_chart(fig_hist, use_container_width=True)
 
-# ─── SCRIPT TO FORCE REFRESH IF ENABLED ─────────────────────────────────────
 if auto_refresh:
     import time
     time.sleep(30)
