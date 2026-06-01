@@ -9,461 +9,611 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 import io
 import time
-from datetime import datetime, timedelta
 
-# ── PAGE CONFIG ──────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════
+# PAGE CONFIG
+# ══════════════════════════════════════════════════════════════
 st.set_page_config(
-    page_title="⚡ SUTM Predictive Maintenance | PT PLN UP3 Bandung",
+    page_title="AI Predictive Maintenance — SUTM",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ── ADVANCED CUSTOM CSS ──────────────────────────────────────
+# ══════════════════════════════════════════════════════════════
+# PHASE 1 — FILE IDs (مخفية داخل الكود)
+# ══════════════════════════════════════════════════════════════
+T1_FILE_ID = "1FegD5m87H-kT-GgkNyS6xLMyW9UJa2Sa"
+T2_FILE_ID = "11lllTP3-mzDG4KOEVyJX6RaDc1n8bTbq"
+
+# ══════════════════════════════════════════════════════════════
+# PHASE 2 — FULL CSS SYSTEM
+# ══════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-    
-    * {
-        font-family: 'Inter', sans-serif;
-    }
-    
-    .main {
-        background: linear-gradient(135deg, #0a0c10 0%, #0d1117 50%, #0a0c10 100%);
-    }
-    
-    /* Hero Section */
-    .hero-container {
-        background: linear-gradient(135deg, rgba(0, 212, 170, 0.1) 0%, rgba(61, 142, 255, 0.1) 50%, rgba(165, 94, 234, 0.1) 100%);
-        border: 1px solid rgba(0, 212, 170, 0.2);
-        border-radius: 20px;
-        padding: 40px;
-        margin-bottom: 30px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .hero-container::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(0, 212, 170, 0.05) 0%, transparent 70%);
-        animation: pulse-glow 4s ease-in-out infinite;
-    }
-    
-    @keyframes pulse-glow {
-        0%, 100% { opacity: 0.5; transform: scale(1); }
-        50% { opacity: 1; transform: scale(1.1); }
-    }
-    
-    .hero-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(0, 212, 170, 0.15);
-        border: 1px solid rgba(0, 212, 170, 0.3);
-        color: #00d4aa;
-        padding: 8px 16px;
-        border-radius: 50px;
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        margin-bottom: 20px;
-    }
-    
-    .hero-badge .pulse {
-        width: 8px;
-        height: 8px;
-        background: #00d4aa;
-        border-radius: 50%;
-        animation: live-pulse 2s ease-in-out infinite;
-    }
-    
-    @keyframes live-pulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.5; transform: scale(1.5); }
-    }
-    
-    .hero-title {
-        font-size: 42px;
-        font-weight: 900;
-        background: linear-gradient(135deg, #00d4aa 0%, #3d8eff 50%, #a55eea 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 10px;
-        line-height: 1.2;
-    }
-    
-    .hero-subtitle {
-        font-size: 18px;
-        color: rgba(232, 234, 240, 0.7);
-        font-weight: 400;
-        margin-bottom: 25px;
-    }
-    
-    .hero-stats {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 15px;
-        margin-top: 25px;
-    }
-    
-    .hero-stat {
-        background: rgba(15, 18, 24, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        padding: 15px;
-        text-align: center;
-    }
-    
-    .hero-stat-value {
-        font-size: 24px;
-        font-weight: 800;
-        color: #e8eaf0;
-    }
-    
-    .hero-stat-label {
-        font-size: 11px;
-        color: rgba(232, 234, 240, 0.5);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-top: 5px;
-    }
-    
-    /* Glassmorphism KPI Cards */
-    .kpi-glass {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        padding: 24px;
-        position: relative;
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }
-    
-    .kpi-glass:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    }
-    
-    .kpi-glow-critical {
-        border-color: rgba(255, 71, 87, 0.3);
-        box-shadow: 0 0 30px rgba(255, 71, 87, 0.1);
-    }
-    
-    .kpi-glow-high {
-        border-color: rgba(255, 165, 2, 0.3);
-        box-shadow: 0 0 30px rgba(255, 165, 2, 0.1);
-    }
-    
-    .kpi-glow-medium {
-        border-color: rgba(61, 142, 255, 0.3);
-        box-shadow: 0 0 30px rgba(61, 142, 255, 0.1);
-    }
-    
-    .kpi-glow-low {
-        border-color: rgba(0, 212, 170, 0.3);
-        box-shadow: 0 0 30px rgba(0, 212, 170, 0.1);
-    }
-    
-    .kpi-icon {
-        font-size: 28px;
-        margin-bottom: 10px;
-    }
-    
-    .kpi-value {
-        font-size: 32px;
-        font-weight: 800;
-        color: #e8eaf0;
-        margin-bottom: 5px;
-    }
-    
-    .kpi-label {
-        font-size: 12px;
-        color: rgba(232, 234, 240, 0.6);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    
-    .kpi-trend {
-        font-size: 12px;
-        margin-top: 8px;
-        font-weight: 600;
-    }
-    
-    /* AI Insight Box */
-    .ai-insight {
-        background: linear-gradient(135deg, rgba(255, 165, 2, 0.1) 0%, rgba(255, 71, 87, 0.05) 100%);
-        border: 1px solid rgba(255, 165, 2, 0.2);
-        border-radius: 16px;
-        padding: 20px;
-        margin: 20px 0;
-        position: relative;
-    }
-    
-    .ai-insight-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 10px;
-    }
-    
-    .ai-insight-icon {
-        font-size: 20px;
-    }
-    
-    .ai-insight-title {
-        font-size: 14px;
-        font-weight: 700;
-        color: #ffa502;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    
-    .ai-insight-text {
-        color: rgba(232, 234, 240, 0.9);
-        font-size: 14px;
-        line-height: 1.6;
-    }
-    
-    .ai-insight-recommendation {
-        margin-top: 10px;
-        padding: 10px 15px;
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 8px;
-        border-left: 3px solid #ffa502;
-        font-size: 13px;
-        color: rgba(232, 234, 240, 0.8);
-    }
-    
-    /* Sidebar Navigation Cards */
-    .nav-card {
-        background: rgba(15, 18, 24, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 8px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    .nav-card:hover {
-        background: rgba(61, 142, 255, 0.1);
-        border-color: rgba(61, 142, 255, 0.3);
-        transform: translateX(5px);
-    }
-    
-    .nav-card.active {
-        background: linear-gradient(135deg, rgba(0, 212, 170, 0.15) 0%, rgba(61, 142, 255, 0.15) 100%);
-        border-color: rgba(0, 212, 170, 0.4);
-    }
-    
-    .nav-card-icon {
-        font-size: 22px;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 10px;
-    }
-    
-    .nav-card-text {
-        flex: 1;
-    }
-    
-    .nav-card-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: #e8eaf0;
-    }
-    
-    .nav-card-desc {
-        font-size: 11px;
-        color: rgba(232, 234, 240, 0.5);
-        margin-top: 2px;
-    }
-    
-    /* System Status */
-    .system-status {
-        background: rgba(0, 212, 170, 0.05);
-        border: 1px solid rgba(0, 212, 170, 0.2);
-        border-radius: 12px;
-        padding: 15px;
-        margin-top: 20px;
-    }
-    
-    .system-status-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 10px;
-    }
-    
-    .system-status-title {
-        font-size: 12px;
-        font-weight: 600;
-        color: #00d4aa;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    
-    .system-status-indicator {
-        width: 8px;
-        height: 8px;
-        background: #00d4aa;
-        border-radius: 50%;
-        animation: live-pulse 2s ease-in-out infinite;
-    }
-    
-    /* Executive Summary Cards */
-    .exec-card {
-        background: linear-gradient(135deg, rgba(15, 18, 24, 0.9) 0%, rgba(20, 25, 35, 0.9) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 20px;
-        padding: 30px;
-        height: 100%;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .exec-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #00d4aa, #3d8eff, #a55eea);
-    }
-    
-    .exec-card-title {
-        font-size: 13px;
-        font-weight: 600;
-        color: rgba(232, 234, 240, 0.6);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 15px;
-    }
-    
-    .exec-card-value {
-        font-size: 36px;
-        font-weight: 900;
-        color: #e8eaf0;
-        margin-bottom: 5px;
-    }
-    
-    .exec-card-subtitle {
-        font-size: 13px;
-        color: rgba(232, 234, 240, 0.5);
-    }
-    
-    /* Section Headers */
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 30px 0 20px 0;
-    }
-    
-    .section-line {
-        flex: 1;
-        height: 1px;
-        background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);
-    }
-    
-    .section-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #e8eaf0;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-    }
-    
-    /* Charts Container */
-    .chart-container {
-        background: rgba(15, 18, 24, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    
-    /* Data Table Styling */
-    .stDataFrame {
-        background: rgba(15, 18, 24, 0.6) !important;
-        border-radius: 16px !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    }
-    
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-        width: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-        background: #0a0c10;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.2);
-    }
-    
-    /* Hide Streamlit Elements */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    
-    /* Metric Container Override */
-    div[data-testid="metric-container"] {
-        background: transparent !important;
-        border: none !important;
-    }
-    
-    /* Sidebar */
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0f1218 0%, #0a0c10 100%) !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    
-    /* Progress Bar */
-    .stProgress > div > div {
-        background: linear-gradient(90deg, #00d4aa, #3d8eff) !important;
-    }
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ── ROOT VARIABLES ── */
+:root {
+    --bg-base:       #060810;
+    --bg-card:       #0c0f1a;
+    --bg-card2:      #101422;
+    --bg-sidebar:    #080b14;
+    --clr-critical:  #ff3355;
+    --clr-high:      #ff8c00;
+    --clr-medium:    #0ea5e9;
+    --clr-low:       #00e5b0;
+    --clr-accent:    #3b82f6;
+    --clr-text:      #e2e8f0;
+    --clr-muted:     #64748b;
+    --clr-border:    rgba(255,255,255,0.06);
+    --glow-critical: 0 0 20px rgba(255,51,85,0.35);
+    --glow-high:     0 0 20px rgba(255,140,0,0.35);
+    --glow-medium:   0 0 20px rgba(14,165,233,0.35);
+    --glow-low:      0 0 20px rgba(0,229,176,0.35);
+    --glow-accent:   0 0 30px rgba(59,130,246,0.2);
+    --font-display:  'Rajdhani', sans-serif;
+    --font-mono:     'JetBrains Mono', monospace;
+    --font-body:     'Inter', sans-serif;
+}
+
+/* ── BASE ── */
+html, body, .stApp { background-color: var(--bg-base) !important; }
+* { font-family: var(--font-body); }
+
+/* ── HIDE STREAMLIT CHROME ── */
+#MainMenu, footer, header { visibility: hidden; }
+.stDeployButton { display: none; }
+[data-testid="stToolbar"] { display: none; }
+
+/* ── SIDEBAR ── */
+[data-testid="stSidebar"] {
+    background: var(--bg-sidebar) !important;
+    border-right: 1px solid var(--clr-border);
+}
+[data-testid="stSidebar"] > div { padding: 0 !important; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+
+/* ── HERO SECTION ── */
+.hero-wrapper {
+    background: linear-gradient(135deg, #060810 0%, #0c1628 50%, #060d1f 100%);
+    border: 1px solid rgba(59,130,246,0.15);
+    border-radius: 16px;
+    padding: 32px 36px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+.hero-wrapper::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+.hero-wrapper::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 400px; height: 200px;
+    background: radial-gradient(ellipse, rgba(0,229,176,0.04) 0%, transparent 70%);
+    pointer-events: none;
+}
+.hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--clr-accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 20px; height: 1px;
+    background: var(--clr-accent);
+}
+.hero-title {
+    font-family: var(--font-display);
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #ffffff 0%, #93c5fd 50%, #00e5b0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 6px 0;
+}
+.hero-subtitle {
+    font-size: 14px;
+    color: var(--clr-muted);
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    margin-bottom: 20px;
+}
+.hero-badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+.badge-live {
+    background: rgba(0,229,176,0.1);
+    border: 1px solid rgba(0,229,176,0.3);
+    color: var(--clr-low);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.badge-live::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--clr-low);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--clr-low);
+    animation: pulse-dot 1.5s infinite;
+}
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+}
+.badge-system {
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.25);
+    color: var(--clr-accent);
+}
+.badge-ai {
+    background: rgba(168,85,247,0.1);
+    border: 1px solid rgba(168,85,247,0.25);
+    color: #c084fc;
+}
+.hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--clr-border);
+}
+.hero-stat {
+    text-align: center;
+}
+.hero-stat-val {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.hero-stat-lbl {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--clr-muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+.stat-critical { color: var(--clr-critical); text-shadow: var(--glow-critical); }
+.stat-high     { color: var(--clr-high);     text-shadow: var(--glow-high); }
+.stat-medium   { color: var(--clr-medium);   text-shadow: var(--glow-medium); }
+.stat-low      { color: var(--clr-low);      text-shadow: var(--glow-low); }
+
+/* ── SIDEBAR NAV CARDS ── */
+.sidebar-header {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--clr-border);
+}
+.pln-logo {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #3b82f6, #00e5b0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.pln-sub {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--clr-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 3px;
+}
+.nav-section-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--clr-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 16px 20px 8px;
+}
+.nav-card {
+    margin: 3px 12px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.nav-card:hover {
+    background: rgba(59,130,246,0.08);
+    border-color: rgba(59,130,246,0.2);
+}
+.nav-card.active {
+    background: rgba(59,130,246,0.12);
+    border-color: rgba(59,130,246,0.3);
+    box-shadow: 0 0 16px rgba(59,130,246,0.1);
+}
+.nav-icon { font-size: 18px; width: 24px; text-align: center; }
+.nav-text {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--clr-text);
+}
+.nav-text-sub {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--clr-muted);
+    letter-spacing: 0.5px;
+}
+.sidebar-status {
+    margin: 16px 12px;
+    padding: 12px 14px;
+    background: rgba(0,229,176,0.05);
+    border: 1px solid rgba(0,229,176,0.15);
+    border-radius: 10px;
+}
+.status-dot-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--clr-low);
+    margin-bottom: 4px;
+}
+.status-dot {
+    width: 7px; height: 7px;
+    background: var(--clr-low);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--clr-low);
+    animation: pulse-dot 2s infinite;
+    flex-shrink: 0;
+}
+.status-time {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--clr-muted);
+}
+
+/* ── KPI CARDS ── */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.kpi-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 18px 16px;
+    border: 1px solid var(--clr-border);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.kpi-card:hover { transform: translateY(-2px); }
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+}
+.kpi-card.kpi-critical::before { background: var(--clr-critical); box-shadow: var(--glow-critical); }
+.kpi-card.kpi-high::before     { background: var(--clr-high);     box-shadow: var(--glow-high); }
+.kpi-card.kpi-medium::before   { background: var(--clr-medium);   box-shadow: var(--glow-medium); }
+.kpi-card.kpi-low::before      { background: var(--clr-low);      box-shadow: var(--glow-low); }
+.kpi-card.kpi-total::before    { background: linear-gradient(90deg, var(--clr-accent), var(--clr-low)); }
+.kpi-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--clr-muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.kpi-value {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+.kpi-delta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    display: inline-block;
+}
+.kpi-delta.up   { background: rgba(255,51,85,0.1);  color: var(--clr-critical); }
+.kpi-delta.down { background: rgba(0,229,176,0.1);  color: var(--clr-low); }
+.kpi-delta.neu  { background: rgba(255,255,255,0.05); color: var(--clr-muted); }
+.kpi-glow-bg {
+    position: absolute;
+    bottom: -30px; right: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    opacity: 0.06;
+}
+.kpi-critical .kpi-value { color: var(--clr-critical); text-shadow: 0 0 20px rgba(255,51,85,0.4); }
+.kpi-high     .kpi-value { color: var(--clr-high);     text-shadow: 0 0 20px rgba(255,140,0,0.4); }
+.kpi-medium   .kpi-value { color: var(--clr-medium);   text-shadow: 0 0 20px rgba(14,165,233,0.4); }
+.kpi-low      .kpi-value { color: var(--clr-low);      text-shadow: 0 0 20px rgba(0,229,176,0.4); }
+.kpi-total    .kpi-value { color: #ffffff; }
+
+/* ── AI INSIGHT CARDS ── */
+.insight-card {
+    background: linear-gradient(135deg, #0c0f1a 0%, #0f1520 100%);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-bottom: 12px;
+    border-left: 3px solid;
+    position: relative;
+    overflow: hidden;
+}
+.insight-card.critical { border-color: var(--clr-critical); box-shadow: -4px 0 16px rgba(255,51,85,0.15); }
+.insight-card.high     { border-color: var(--clr-high);     box-shadow: -4px 0 16px rgba(255,140,0,0.15); }
+.insight-card.info     { border-color: var(--clr-accent);   box-shadow: -4px 0 16px rgba(59,130,246,0.15); }
+.insight-card.success  { border-color: var(--clr-low);      box-shadow: -4px 0 16px rgba(0,229,176,0.15); }
+.insight-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.insight-icon { font-size: 18px; }
+.insight-title {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--clr-text);
+    letter-spacing: 0.3px;
+}
+.insight-body {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.6;
+}
+.insight-action {
+    margin-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 4px;
+    display: inline-block;
+}
+.insight-card.critical .insight-action { background: rgba(255,51,85,0.1); color: var(--clr-critical); }
+.insight-card.high     .insight-action { background: rgba(255,140,0,0.1); color: var(--clr-high); }
+.insight-card.info     .insight-action { background: rgba(59,130,246,0.1); color: var(--clr-accent); }
+
+/* ── ALERT BANNER ── */
+.alert-banner {
+    background: linear-gradient(135deg, rgba(255,51,85,0.08), rgba(255,140,0,0.05));
+    border: 1px solid rgba(255,51,85,0.25);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.alert-banner-icon { font-size: 22px; }
+.alert-banner-text { font-size: 13px; color: var(--clr-text); }
+.alert-banner-text strong { color: var(--clr-critical); }
+
+/* ── SECTION HEADER ── */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 28px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--clr-border);
+}
+.section-icon { font-size: 18px; }
+.section-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--clr-text);
+    letter-spacing: 0.5px;
+}
+.section-badge {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.2);
+    color: var(--clr-accent);
+    text-transform: uppercase;
+}
+
+/* ── LOADING SKELETON ── */
+.skeleton {
+    background: linear-gradient(90deg, #0c0f1a 25%, #141826 50%, #0c0f1a 75%);
+    background-size: 400% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 10px;
+}
+@keyframes shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+/* ── EXEC SUMMARY ── */
+.health-score-ring {
+    text-align: center;
+    padding: 20px;
+}
+.health-score-num {
+    font-family: var(--font-display);
+    font-size: 64px;
+    font-weight: 700;
+    line-height: 1;
+    background: linear-gradient(135deg, #00e5b0, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.health-score-lbl {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--clr-muted);
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+.priority-matrix {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.priority-item {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid var(--clr-border);
+}
+.priority-rank {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--clr-muted);
+    margin-bottom: 6px;
+}
+.priority-name {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--clr-text);
+}
+.priority-bar {
+    height: 4px;
+    background: var(--clr-border);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+.priority-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--clr-critical), var(--clr-high));
+}
+
+/* ── TABLE STYLING ── */
+.stDataFrame { border-radius: 12px; overflow: hidden; }
+[data-testid="stDataFrameResizable"] { border: 1px solid var(--clr-border) !important; border-radius: 12px; }
+
+/* ── PLOTLY CHARTS ── */
+.stPlotlyChart { border-radius: 12px; overflow: hidden; }
+
+/* ── METRIC OVERRIDE ── */
+div[data-testid="metric-container"] {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--clr-border) !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+}
+
+/* ── BUTTONS ── */
+.stButton > button {
+    background: rgba(59,130,246,0.1) !important;
+    border: 1px solid rgba(59,130,246,0.3) !important;
+    color: var(--clr-accent) !important;
+    border-radius: 8px !important;
+    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    transition: all 0.2s !important;
+}
+.stButton > button:hover {
+    background: rgba(59,130,246,0.2) !important;
+    box-shadow: 0 0 16px rgba(59,130,246,0.2) !important;
+}
+
+/* ── SELECTBOX / MULTISELECT ── */
+.stSelectbox > div > div,
+.stMultiSelect > div > div {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--clr-border) !important;
+    border-radius: 8px !important;
+}
+
+/* ── DIVIDER ── */
+hr { border-color: var(--clr-border) !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── COLORS ───────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════
+# COLORS & THEME
+# ══════════════════════════════════════════════════════════════
 COLORS = {
-    "CRITICAL": "#ff4757",
-    "HIGH":     "#ffa502",
-    "MEDIUM":   "#3d8eff",
-    "LOW":      "#00d4aa",
+    "CRITICAL": "#ff3355",
+    "HIGH":     "#ff8c00",
+    "MEDIUM":   "#0ea5e9",
+    "LOW":      "#00e5b0",
 }
-PLOT_BG   = "#0f1218"
-PAPER_BG  = "#0a0c10"
-FONT_COL  = "#e8eaf0"
-GRID_COL  = "rgba(255,255,255,0.05)"
+PLOT_BG  = "#0c0f1a"
+PAPER_BG = "#060810"
+FONT_COL = "#e2e8f0"
+GRID_COL = "rgba(255,255,255,0.04)"
 
-# ── GOOGLE DRIVE LOADER ──────────────────────────────────────
+def dark_layout(fig, title="", height=350):
+    fig.update_layout(
+        title=dict(text=title, font=dict(family="Rajdhani, sans-serif", size=15, color=FONT_COL)),
+        height=height,
+        paper_bgcolor=PAPER_BG,
+        plot_bgcolor=PLOT_BG,
+        font=dict(color=FONT_COL, family="Inter, sans-serif", size=11),
+        margin=dict(l=16, r=16, t=44 if title else 16, b=16),
+        legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(size=10), borderwidth=0),
+        xaxis=dict(gridcolor=GRID_COL, linecolor=GRID_COL, zerolinecolor=GRID_COL),
+        yaxis=dict(gridcolor=GRID_COL, linecolor=GRID_COL, zerolinecolor=GRID_COL),
+    )
+    return fig
+
+# ══════════════════════════════════════════════════════════════
+# PHASE 1 — GOOGLE DRIVE LOADER
+# ══════════════════════════════════════════════════════════════
 @st.cache_data(ttl=30)
 def load_from_drive(file_id: str, sheet_name: str) -> pd.DataFrame:
-    """يقرأ ملف Excel من Google Drive مباشرة"""
     try:
         creds_info = st.secrets["google_service_account"]
         creds = service_account.Credentials.from_service_account_info(
@@ -483,7 +633,9 @@ def load_from_drive(file_id: str, sheet_name: str) -> pd.DataFrame:
         st.error(f"خطأ في قراءة الملف: {e}")
         return pd.DataFrame()
 
-# ── HI MAPPING ───────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════
+# HI MAPPING & PROCESSING (unchanged logic)
+# ══════════════════════════════════════════════════════════════
 HI_MAP = {"BAIK": 3, "CUKUP": 2, "KURANG": 1, "BURUK": 0}
 
 def hi_from_text(val):
@@ -498,17 +650,14 @@ def hi_from_text(val):
         return 2
     return 3
 
-# ── DATA PROCESSING ──────────────────────────────────────────
 @st.cache_data(ttl=30)
 def process_data(t1_id: str, t2_id: str):
-    """يعالج البيانات ويحسب Risk لكل تيانج"""
     t1 = load_from_drive(t1_id, "DATA")
     t2 = load_from_drive(t2_id, "DATA")
 
     if t1.empty:
         return pd.DataFrame(), pd.DataFrame()
 
-    # Visual HI
     cond_cols = [
         "KONDISI TIANG", "KONDISI EKSTENSI", "KONDISI TRAVERS", "KONDISI GSW",
         "KONDISI PENYANGGA TIANG", "KONDISI PENAMPANG", "KONDISI JUMPER",
@@ -525,7 +674,6 @@ def process_data(t1_id: str, t2_id: str):
     t1["N_BURUK"]  = t1[hi_cols].apply(lambda r: sum(1 for v in r if v == 0), axis=1)
     t1["N_KURANG"] = t1[hi_cols].apply(lambda r: sum(1 for v in r if v == 1), axis=1)
 
-    # Worst per tiang
     worst = (t1.groupby(["TIANG_ID", "ULP", "PENYULANG", "NO TIANG"])
                .agg(N_BURUK=("N_BURUK","max"), N_KURANG=("N_KURANG","max"))
                .reset_index())
@@ -544,7 +692,6 @@ def process_data(t1_id: str, t2_id: str):
                            + np.random.uniform(-4, 4, len(worst)))
     worst["RISK_SCORE"] = worst["RISK_SCORE"].clip(0, 100).round(1)
 
-    # T2 thermal
     if not t2.empty:
         t2["TIANG_ID"] = (t2["PENYULANG"].astype(str).str.strip()
                           + "_" + t2["NO TIANG"].astype(str).str.strip())
@@ -554,7 +701,6 @@ def process_data(t1_id: str, t2_id: str):
         vt = t2[temp_c].apply(pd.to_numeric, errors="coerce")
         t2["DELTA_SUHU"] = (vt.max(axis=1) - vt.min(axis=1)).fillna(0)
 
-    # HI stats per component
     comp_map = {
         "HI_KONDISI TIANG":           "Tiang (Pole)",
         "HI_KONDISI TRAVERS":         "Travers",
@@ -583,418 +729,363 @@ def process_data(t1_id: str, t2_id: str):
 
     worst._hi_stats = hi_stats
     worst._t1_raw   = t1
-    worst._t2_raw   = t2
+    worst._t2_raw   = t2 if not t2.empty else pd.DataFrame()
 
     return worst, pd.DataFrame(hi_stats)
 
-# ── CHART THEME ──────────────────────────────────────────────
-def dark_layout(fig, title="", height=350):
-    fig.update_layout(
-        title=title,
-        height=height,
-        paper_bgcolor=PAPER_BG,
-        plot_bgcolor=PLOT_BG,
-        font=dict(color=FONT_COL, family="Inter, sans-serif", size=11),
-        margin=dict(l=16, r=16, t=50 if title else 16, b=16),
-        legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(size=10)),
-        xaxis=dict(gridcolor=GRID_COL, linecolor=GRID_COL, zerolinecolor=GRID_COL),
-        yaxis=dict(gridcolor=GRID_COL, linecolor=GRID_COL, zerolinecolor=GRID_COL),
-    )
-    return fig
-
-# ── AI INSIGHT ENGINE ────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════
+# PHASE 4 — AI INSIGHT ENGINE
+# ══════════════════════════════════════════════════════════════
 def generate_ai_insights(df, hi_df):
-    """يولد رؤى AI بناءً على البيانات"""
     insights = []
-    
+
     if df.empty:
         return insights
-    
-    # Insight 1: Highest risk ULP
-    ulp_risk = df.groupby("ULP").agg({
-        "RISK_SCORE": "mean",
-        "RISK_CLASS": lambda x: (x.isin(["CRITICAL", "HIGH"])).sum()
-    }).reset_index()
-    ulp_risk.columns = ["ULP", "AVG_RISK", "CRITICAL_HIGH_COUNT"]
-    top_risk_ulp = ulp_risk.loc[ulp_risk["CRITICAL_HIGH_COUNT"].idxmax()]
-    
-    insights.append({
-        "type": "warning",
-        "icon": "⚠️",
-        "title": "High Risk Concentration Detected",
-        "text": f"ULP **{top_risk_ulp['ULP']}** has the highest concentration of HIGH/CRITICAL risk poles ({int(top_risk_ulp['CRITICAL_HIGH_COUNT'])} poles).",
-        "recommendation": f"Recommended preventive inspection within 14 days. Average risk score: {top_risk_ulp['AVG_RISK']:.1f}/100",
-        "severity": "high"
-    })
-    
-    # Insight 2: Component failure prediction
-    if not hi_df.empty:
-        worst_comp = hi_df.loc[hi_df["BURUK"].idxmax()]
-        total_buruk = worst_comp["BURUK"]
-        if total_buruk > 0:
+
+    rc = df["RISK_CLASS"].value_counts()
+    total = len(df)
+    n_crit = int(rc.get("CRITICAL", 0))
+    n_high = int(rc.get("HIGH", 0))
+
+    # Insight 1 — Critical ULP
+    if "ULP" in df.columns:
+        crit_by_ulp = df[df["RISK_CLASS"] == "CRITICAL"].groupby("ULP").size()
+        if not crit_by_ulp.empty:
+            top_ulp = crit_by_ulp.idxmax()
+            top_count = int(crit_by_ulp.max())
+            pct = round(top_count / total * 100, 1)
             insights.append({
-                "type": "alert",
-                "icon": "🔧",
-                "title": "Component Failure Prediction",
-                "text": f"**{worst_comp['Component']}** shows highest failure rate with {total_buruk} BURUK conditions detected.",
-                "recommendation": "Priority replacement program recommended for this component category.",
-                "severity": "critical" if total_buruk > 50 else "high"
+                "type": "critical",
+                "icon": "🚨",
+                "title": f"Critical Concentration — {top_ulp}",
+                "body": f"{top_ulp} has the highest concentration of CRITICAL-risk poles ({top_count} poles, {pct}% of fleet). Immediate preventive inspection recommended within 7–14 days to prevent cascading failures.",
+                "action": "Schedule Inspection"
             })
-    
-    # Insight 3: Risk trend
-    crit_pct = (df["RISK_CLASS"] == "CRITICAL").sum() / len(df) * 100
-    if crit_pct > 1:
+
+    # Insight 2 — Overall risk level
+    risk_ratio = (n_crit + n_high) / total * 100 if total > 0 else 0
+    if risk_ratio > 20:
+        insights.append({
+            "type": "high",
+            "icon": "⚠️",
+            "title": "Fleet Risk Threshold Exceeded",
+            "body": f"{risk_ratio:.1f}% of the asset fleet is classified HIGH or CRITICAL risk ({n_crit + n_high:,} poles). This exceeds the recommended 15% safety threshold. Accelerated maintenance scheduling is advised.",
+            "action": "View Priority List"
+        })
+    else:
         insights.append({
             "type": "info",
-            "icon": "📈",
-            "title": "Critical Asset Alert",
-            "text": f"{crit_pct:.1f}% of assets are in CRITICAL condition requiring immediate attention.",
-            "recommendation": "Emergency maintenance protocol should be activated for CRITICAL assets.",
-            "severity": "critical"
+            "icon": "✅",
+            "title": "Fleet Risk Within Acceptable Range",
+            "body": f"Overall fleet risk ratio is {risk_ratio:.1f}%. Combined HIGH+CRITICAL count stands at {n_crit + n_high:,} poles. Continue scheduled preventive maintenance cycle.",
+            "action": "View Details"
         })
-    
-    # Insight 4: Health overview
-    healthy_pct = (df["RISK_CLASS"] == "LOW").sum() / len(df) * 100
-    insights.append({
-        "type": "success",
-        "icon": "✅",
-        "title": "Asset Health Overview",
-        "text": f"{healthy_pct:.1f}% of assets are in healthy condition (LOW risk).",
-        "recommendation": "Continue routine maintenance schedule for healthy assets.",
-        "severity": "low"
-    })
-    
+
+    # Insight 3 — Worst component
+    if not hi_df.empty and "BURUK" in hi_df.columns:
+        worst_comp = hi_df.loc[hi_df["BURUK"].idxmax()]
+        if worst_comp["BURUK"] > 0:
+            insights.append({
+                "type": "high",
+                "icon": "🔧",
+                "title": f"Component Alert — {worst_comp['Component']}",
+                "body": f"{worst_comp['Component']} has the highest BURUK count ({int(worst_comp['BURUK']):,} units). This component should be prioritized in the next maintenance batch to reduce cascading risk.",
+                "action": "Inspect Component"
+            })
+
+    # Insight 4 — Top penyulang risk
+    if "PENYULANG" in df.columns:
+        pen_risk = df[df["RISK_CLASS"].isin(["CRITICAL","HIGH"])].groupby("PENYULANG").size()
+        if not pen_risk.empty:
+            top_pen = pen_risk.idxmax()
+            top_pen_count = int(pen_risk.max())
+            insights.append({
+                "type": "info",
+                "icon": "⚡",
+                "title": f"High-Risk Feeder — {top_pen}",
+                "body": f"Feeder {top_pen} concentrates {top_pen_count} HIGH/CRITICAL poles. Consider isolating for targeted inspection to minimize service disruption risk.",
+                "action": "Analyze Feeder"
+            })
+
     return insights
 
-# ── GAUGE CHART ──────────────────────────────────────────────
-def create_gauge_chart(value, title, color):
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number+delta",
-        value=value,
-        title={"text": title, "font": {"size": 14, "color": FONT_COL}},
-        number={"font": {"size": 24, "color": color, "family": "Inter"}},
-        gauge={
-            "axis": {"range": [0, 100], "tickwidth": 1, "tickcolor": GRID_COL},
-            "bar": {"color": color, "thickness": 0.75},
-            "bgcolor": "rgba(0,0,0,0)",
-            "borderwidth": 2,
-            "bordercolor": "rgba(255,255,255,0.1)",
-            "steps": [
-                {"range": [0, 25], "color": "rgba(0, 212, 170, 0.1)"},
-                {"range": [25, 50], "color": "rgba(61, 142, 255, 0.1)"},
-                {"range": [50, 75], "color": "rgba(255, 165, 2, 0.1)"},
-                {"range": [75, 100], "color": "rgba(255, 71, 87, 0.1)"},
-            ],
-            "threshold": {
-                "line": {"color": color, "width": 4},
-                "thickness": 0.75,
-                "value": value
-            }
-        }
-    ))
-    dark_layout(fig, "", 250)
-    return fig
+# ══════════════════════════════════════════════════════════════
+# SIDEBAR — PHASE 2 (Navigation Cards)
+# ══════════════════════════════════════════════════════════════
+PAGES = [
+    ("📊", "Overview",         "Fleet status & KPIs"),
+    ("⚠️", "Risk Analysis",    "Risk distribution"),
+    ("🏥", "Health Index",     "Component HI"),
+    ("🌡️", "Thermal",          "Temperature data"),
+    ("🤖", "ML Comparison",    "Model benchmarks"),
+    ("🎯", "Priority Poles",   "Top risk assets"),
+    ("📋", "Executive Summary","Management view"),
+]
 
-# ══════════════════════════════════════════════════════════════
-# SIDEBAR
-# ══════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown("""
-    <div style="text-align: center; margin-bottom: 30px;">
-        <div style="font-size: 32px; margin-bottom: 10px;">⚡</div>
-        <div style="font-size: 18px; font-weight: 800; color: #e8eaf0;">SUTM Dashboard</div>
-        <div style="font-size: 11px; color: rgba(232,234,240,0.5); margin-top: 5px;">PT PLN UP3 Bandung · 2026</div>
+    <div class="sidebar-header">
+        <div class="pln-logo">⚡ PLN UP3</div>
+        <div class="pln-sub">PT PLN · Bandung · 2026</div>
     </div>
     """, unsafe_allow_html=True)
-    
-    st.divider()
-    
-    st.markdown("#### 🔗 Google Drive File IDs")
-    t1_id = st.text_input("SUTMT1 (Visual) File ID",
-                           value="1FegD5m87H-kT-GgkNyS6xLMyW9UJa2S",
-                           help="من رابط Google Drive: drive.google.com/file/d/**THIS_ID**/view")
-    t2_id = st.text_input("SUTMT2 (Thermal) File ID",
-                           value="11lITP3-mzDG4KOEVyJX6RaDc1n8bTbq")
 
-    st.divider()
-    
-    # System Status
-    st.markdown("""
-    <div class="system-status">
-        <div class="system-status-header">
-            <span class="system-status-title">System Status</span>
-            <div class="system-status-indicator"></div>
+    st.markdown('<div class="nav-section-label">Navigation</div>', unsafe_allow_html=True)
+
+    # Use session state for active page
+    if "page_idx" not in st.session_state:
+        st.session_state.page_idx = 0
+
+    for i, (icon, name, desc) in enumerate(PAGES):
+        is_active = st.session_state.page_idx == i
+        active_cls = "active" if is_active else ""
+        if st.button(
+            f"{icon}  {name}",
+            key=f"nav_{i}",
+            use_container_width=True,
+            help=desc
+        ):
+            st.session_state.page_idx = i
+            st.rerun()
+
+    page = PAGES[st.session_state.page_idx][1]
+
+    st.markdown('<div class="nav-section-label" style="margin-top:8px;">System</div>', unsafe_allow_html=True)
+
+    now_str = pd.Timestamp.now().strftime("%H:%M:%S")
+    st.markdown(f"""
+    <div class="sidebar-status">
+        <div class="status-dot-row">
+            <div class="status-dot"></div>
+            LIVE MONITORING
         </div>
-        <div style="font-size: 12px; color: rgba(232,234,240,0.6);">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <span>AI Engine</span>
-                <span style="color: #00d4aa;">● Active</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <span>Data Pipeline</span>
-                <span style="color: #00d4aa;">● Connected</span>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-                <span>Last Sync</span>
-                <span style="color: #ffa502;">Just now</span>
-            </div>
-        </div>
+        <div class="status-time">Last sync: {now_str}</div>
+        <div class="status-time">Auto-refresh: 30s</div>
     </div>
     """, unsafe_allow_html=True)
-    
-    st.divider()
-    
-    # Navigation
-    st.markdown("#### Navigation")
-    
-    nav_items = [
-        ("📊", "Overview", "Dashboard overview & KPIs"),
-        ("⚠️", "Risk Analysis", "Detailed risk assessment"),
-        ("🏥", "Health Index", "Component health status"),
-        ("🌡️", "Thermal", "Thermal inspection data"),
-        ("🤖", "ML Comparison", "Model performance metrics"),
-        ("🎯", "Priority Poles", "Critical asset list"),
-        ("📋", "Executive Summary", "Management dashboard"),
-    ]
-    
-    # Use radio but styled
-    page_options = [f"{icon} {title}" for icon, title, _ in nav_items]
-    page = st.radio("", page_options, label_visibility="collapsed")
-    
-    st.divider()
-    
-    auto_refresh = st.toggle("🔄 Auto Refresh (30s)", value=True)
-    if st.button("⟳ Refresh Now", use_container_width=True):
+
+    auto_refresh = st.toggle("🔄 Auto Refresh", value=True)
+    if st.button("⟳ Manual Refresh", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
 
 # ── AUTO REFRESH ─────────────────────────────────────────────
 if auto_refresh:
-    st.markdown(
-        '<meta http-equiv="refresh" content="30">',
-        unsafe_allow_html=True
-    )
+    st.markdown('<meta http-equiv="refresh" content="30">', unsafe_allow_html=True)
 
-# ── LOAD DATA ────────────────────────────────────────────────
-with st.spinner("🔄 Loading data from Google Drive..."):
-    df, hi_df = process_data(t1_id, t2_id)
+# ══════════════════════════════════════════════════════════════
+# PHASE 6 — SMART LOADING
+# ══════════════════════════════════════════════════════════════
+loading_placeholder = st.empty()
+with loading_placeholder.container():
+    st.markdown("""
+    <div style="display:flex;align-items:center;gap:14px;padding:20px;
+                background:#0c0f1a;border-radius:12px;border:1px solid rgba(255,255,255,0.06);
+                margin-bottom:16px;">
+        <div style="font-size:24px;">⚡</div>
+        <div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:15px;color:#e2e8f0;font-weight:600;">
+                Loading asset intelligence...
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748b;margin-top:4px;">
+                Connecting to Google Drive · Processing SUTM data
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+df, hi_df = process_data(T1_FILE_ID, T2_FILE_ID)
+loading_placeholder.empty()
 
 if df.empty:
-    st.error("⚠️ No data available. Please check File IDs and Google Drive permissions.")
+    st.markdown("""
+    <div style="background:rgba(255,51,85,0.08);border:1px solid rgba(255,51,85,0.25);
+                border-radius:12px;padding:24px;text-align:center;">
+        <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:18px;color:#ff3355;font-weight:600;">
+            No Data Available
+        </div>
+        <div style="font-size:13px;color:#64748b;margin-top:8px;">
+            Please verify Google Drive credentials and file access permissions.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     st.stop()
 
 # ── COMPUTED VALUES ───────────────────────────────────────────
-rc      = df["RISK_CLASS"].value_counts()
-total   = len(df)
-n_crit  = int(rc.get("CRITICAL", 0))
-n_high  = int(rc.get("HIGH",     0))
-n_med   = int(rc.get("MEDIUM",   0))
-n_low   = int(rc.get("LOW",      0))
-n_defect= int((df["N_BURUK"] > 0).sum() + (df["N_KURANG"] > 0).sum())
+rc       = df["RISK_CLASS"].value_counts()
+total    = len(df)
+n_crit   = int(rc.get("CRITICAL", 0))
+n_high   = int(rc.get("HIGH",     0))
+n_med    = int(rc.get("MEDIUM",   0))
+n_low    = int(rc.get("LOW",      0))
+n_defect = int((df["N_BURUK"] > 0).sum() + (df["N_KURANG"] > 0).sum())
 last_update = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
-
-# Generate AI Insights
-ai_insights = generate_ai_insights(df, hi_df)
+top_risk_ulp = df.groupby("ULP")["N_BURUK"].sum().idxmax() if "ULP" in df.columns else "—"
+avg_score = df["RISK_SCORE"].mean()
+health_score = max(0, min(100, round(100 - avg_score, 1)))
 
 # ══════════════════════════════════════════════════════════════
 # PAGES
 # ══════════════════════════════════════════════════════════════
 
 # ── OVERVIEW ─────────────────────────────────────────────────
-if "Overview" in page:
-    # Hero Section
+if page == "Overview":
+
+    # HERO SECTION
     st.markdown(f"""
-    <div class="hero-container">
-        <div style="position: relative; z-index: 1;">
-            <div class="hero-badge">
-                <div class="pulse"></div>
-                AI Monitoring Active
+    <div class="hero-wrapper">
+        <div class="hero-eyebrow">PT PLN UP3 Bandung · SUTM Asset Intelligence Platform</div>
+        <div class="hero-title">⚡ AI Predictive Maintenance</div>
+        <div class="hero-subtitle">Real-time SUTM Asset Intelligence · Powered by Machine Learning</div>
+        <div class="hero-badges">
+            <span class="badge badge-live">LIVE MONITORING</span>
+            <span class="badge badge-system">SUTM NETWORK</span>
+            <span class="badge badge-ai">AI-POWERED</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#475569;">
+                Last sync: {last_update}
+            </span>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="hero-stat-val" style="color:#ffffff;">{total:,}</div>
+                <div class="hero-stat-lbl">Total Poles</div>
             </div>
-            <div class="hero-title">Predictive Maintenance Platform</div>
-            <div class="hero-subtitle">
-                Real-Time SUTM Asset Intelligence & Risk Monitoring System<br>
-                PT PLN UP3 Bandung · Industrial AI Analytics
+            <div class="hero-stat">
+                <div class="hero-stat-val stat-critical">{n_crit:,}</div>
+                <div class="hero-stat-lbl">Critical</div>
             </div>
-            <div class="hero-stats">
-                <div class="hero-stat">
-                    <div class="hero-stat-value" style="color: #e8eaf0;">{total:,}</div>
-                    <div class="hero-stat-label">Total Assets</div>
-                </div>
-                <div class="hero-stat">
-                    <div class="hero-stat-value" style="color: #ff4757;">{n_crit}</div>
-                    <div class="hero-stat-label">Critical</div>
-                </div>
-                <div class="hero-stat">
-                    <div class="hero-stat-value" style="color: #ffa502;">{n_high}</div>
-                    <div class="hero-stat-label">High Risk</div>
-                </div>
-                <div class="hero-stat">
-                    <div class="hero-stat-value" style="color: #00d4aa;">{last_update}</div>
-                    <div class="hero-stat-label">Last Update</div>
-                </div>
+            <div class="hero-stat">
+                <div class="hero-stat-val stat-high">{n_high:,}</div>
+                <div class="hero-stat-lbl">High Risk</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-val stat-low">{health_score}</div>
+                <div class="hero-stat-lbl">Health Score</div>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
-    
-    # AI Insights
-    if ai_insights:
-        for insight in ai_insights[:2]:  # Show top 2 insights
-            severity_color = {
-                "critical": "#ff4757",
-                "high": "#ffa502", 
-                "medium": "#3d8eff",
-                "low": "#00d4aa"
-            }.get(insight["severity"], "#ffa502")
-            
-            st.markdown(f"""
-            <div class="ai-insight" style="border-color: {severity_color}40;">
-                <div class="ai-insight-header">
-                    <span class="ai-insight-icon">{insight["icon"]}</span>
-                    <span class="ai-insight-title" style="color: {severity_color};">{insight["title"]}</span>
-                </div>
-                <div class="ai-insight-text">{insight["text"]}</div>
-                <div class="ai-insight-recommendation" style="border-left-color: {severity_color};">
-                    <strong>AI Recommendation:</strong> {insight["recommendation"]}
-                </div>
+
+    # ALERT BANNER (if critical > threshold)
+    if n_crit > 0:
+        st.markdown(f"""
+        <div class="alert-banner">
+            <div class="alert-banner-icon">🚨</div>
+            <div class="alert-banner-text">
+                <strong>{n_crit:,} CRITICAL poles</strong> detected in the network —
+                immediate inspection required for {top_risk_ulp} zone.
+                Combined HIGH+CRITICAL: <strong>{n_crit+n_high:,} poles ({(n_crit+n_high)/total*100:.1f}%)</strong>
             </div>
-            """, unsafe_allow_html=True)
-    
-    # Enterprise KPIs with Glassmorphism
-    st.markdown("""
-    <div class="section-header">
-        <span class="section-title">Risk Overview</span>
-        <div class="section-line"></div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # KPI CARDS
+    st.markdown(f"""
+    <div class="kpi-grid">
+        <div class="kpi-card kpi-total">
+            <div class="kpi-label">Total Poles</div>
+            <div class="kpi-value">{total:,}</div>
+            <span class="kpi-delta neu">SUTMT1 Dataset</span>
+            <div class="kpi-glow-bg" style="background:#3b82f6;"></div>
+        </div>
+        <div class="kpi-card kpi-critical">
+            <div class="kpi-label">Critical</div>
+            <div class="kpi-value">{n_crit:,}</div>
+            <span class="kpi-delta up">{n_crit/total*100:.1f}% of fleet</span>
+            <div class="kpi-glow-bg" style="background:#ff3355;"></div>
+        </div>
+        <div class="kpi-card kpi-high">
+            <div class="kpi-label">High Risk</div>
+            <div class="kpi-value">{n_high:,}</div>
+            <span class="kpi-delta up">{n_high/total*100:.1f}% of fleet</span>
+            <div class="kpi-glow-bg" style="background:#ff8c00;"></div>
+        </div>
+        <div class="kpi-card kpi-medium">
+            <div class="kpi-label">Medium Risk</div>
+            <div class="kpi-value">{n_med:,}</div>
+            <span class="kpi-delta neu">{n_med/total*100:.1f}% of fleet</span>
+            <div class="kpi-glow-bg" style="background:#0ea5e9;"></div>
+        </div>
+        <div class="kpi-card kpi-low">
+            <div class="kpi-label">Low Risk</div>
+            <div class="kpi-value">{n_low:,}</div>
+            <span class="kpi-delta down">{n_low/total*100:.1f}% of fleet</span>
+            <div class="kpi-glow-bg" style="background:#00e5b0;"></div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
-    
-    kpi_cols = st.columns(4)
-    kpi_data = [
-        ("🔴", "CRITICAL", n_crit, f"{n_crit/total*100:.1f}%", "kpi-glow-critical", "#ff4757"),
-        ("🟠", "HIGH", n_high, f"{n_high/total*100:.1f}%", "kpi-glow-high", "#ffa502"),
-        ("🔵", "MEDIUM", n_med, f"{n_med/total*100:.1f}%", "kpi-glow-medium", "#3d8eff"),
-        ("🟢", "LOW", n_low, f"{n_low/total*100:.1f}%", "kpi-glow-low", "#00d4aa"),
-    ]
-    
-    for col, (icon, label, value, pct, glow_class, color) in zip(kpi_cols, kpi_data):
-        with col:
-            st.markdown(f"""
-            <div class="kpi-glass {glow_class}">
-                <div class="kpi-icon">{icon}</div>
-                <div class="kpi-value" style="color: {color};">{value:,}</div>
-                <div class="kpi-label">{label}</div>
-                <div class="kpi-trend" style="color: {color};">{pct} of total</div>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # Charts Section
-    st.markdown("""
-    <div class="section-header">
-        <span class="section-title">Analytics</span>
-        <div class="section-line"></div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col1, col2 = st.columns([1, 1.2])
-    
+
+    # CHARTS ROW
+    st.markdown('<div class="section-header"><span class="section-icon">📊</span><span class="section-title">Fleet Overview</span><span class="section-badge">Live Data</span></div>', unsafe_allow_html=True)
+
+    col1, col2 = st.columns(2)
+
     with col1:
-        # Gauge Chart for Overall Health
-        health_score = (n_low / total * 100) if total > 0 else 0
-        fig_gauge = create_gauge_chart(health_score, "Asset Health Score", "#00d4aa")
-        st.plotly_chart(fig_gauge, use_container_width=True)
-        
-        # Risk Donut
         fig = go.Figure(go.Pie(
             labels=["CRITICAL","HIGH","MEDIUM","LOW"],
             values=[n_crit, n_high, n_med, n_low],
-            hole=0.7,
-            marker=dict(colors=list(COLORS.values()), line=dict(width=2, color=PAPER_BG)),
+            hole=0.70,
+            marker=dict(colors=list(COLORS.values()),
+                        line=dict(color=PAPER_BG, width=3)),
             textinfo="none",
             hovertemplate="%{label}: %{value:,} (%{percent})<extra></extra>",
         ))
-        fig.add_annotation(text=f"<b>{total:,}</b><br>Assets",
-                           x=0.5, y=0.5, showarrow=False,
-                           font=dict(size=18, color=FONT_COL, family="Inter"))
-        dark_layout(fig, "Risk Distribution", 300)
+        fig.add_annotation(
+            text=f"<b style='font-size:18px'>{total:,}</b><br><span style='font-size:11px;color:#64748b'>POLES</span>",
+            x=0.5, y=0.5, showarrow=False,
+            font=dict(size=14, color=FONT_COL, family="Rajdhani, sans-serif")
+        )
+        dark_layout(fig, "Risk Distribution", 340)
         st.plotly_chart(fig, use_container_width=True)
-    
+
     with col2:
-        # ULP Risk Heatmap
-        ulp_pivot = df.groupby(["ULP", "RISK_CLASS"]).size().unstack(fill_value=0)
-        for col in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
-            if col not in ulp_pivot.columns:
-                ulp_pivot[col] = 0
-        
-        fig_heat = px.imshow(
-            ulp_pivot[["CRITICAL", "HIGH", "MEDIUM", "LOW"]].values,
-            x=["CRITICAL", "HIGH", "MEDIUM", "LOW"],
-            y=ulp_pivot.index,
-            color_continuous_scale=[[0, "rgba(0,0,0,0)"], [1, "#ff4757"]],
-            aspect="auto"
-        )
-        fig_heat.update_traces(
-            hovertemplate="ULP: %{y}<br>Risk: %{x}<br>Count: %{z}<extra></extra>"
-        )
-        dark_layout(fig_heat, "Risk Heatmap by ULP", 300)
-        st.plotly_chart(fig_heat, use_container_width=True)
-        
-        # ULP Stacked Bar
         ulp_data = (df.groupby(["ULP","RISK_CLASS"])
                       .size().reset_index(name="count"))
         fig2 = px.bar(ulp_data, x="ULP", y="count", color="RISK_CLASS",
                       color_discrete_map=COLORS, barmode="stack",
                       category_orders={"RISK_CLASS":["CRITICAL","HIGH","MEDIUM","LOW"]})
-        fig2.update_layout(xaxis_tickangle=-35, showlegend=True)
-        dark_layout(fig2, "Risk by ULP", 300)
+        fig2.update_layout(xaxis_tickangle=-35, showlegend=True,
+                           bargap=0.3, bargroupgap=0.1)
+        dark_layout(fig2, "Risk Distribution by ULP", 340)
         st.plotly_chart(fig2, use_container_width=True)
-    
-    # Summary Stats
-    st.markdown("""
-    <div class="section-header">
-        <span class="section-title">Summary</span>
-        <div class="section-line"></div>
-    </div>
-    """, unsafe_allow_html=True)
-    
+
+    # AI INSIGHTS SECTION
+    st.markdown('<div class="section-header"><span class="section-icon">🤖</span><span class="section-title">AI Insight Engine</span><span class="section-badge">Auto-Generated</span></div>', unsafe_allow_html=True)
+
+    insights = generate_ai_insights(df, hi_df)
+    col_a, col_b = st.columns(2)
+    for i, ins in enumerate(insights):
+        with (col_a if i % 2 == 0 else col_b):
+            st.markdown(f"""
+            <div class="insight-card {ins['type']}">
+                <div class="insight-header">
+                    <span class="insight-icon">{ins['icon']}</span>
+                    <span class="insight-title">{ins['title']}</span>
+                </div>
+                <div class="insight-body">{ins['body']}</div>
+                <span class="insight-action">{ins['action']}</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # BOTTOM STATS
+    st.markdown('<div class="section-header"><span class="section-icon">📈</span><span class="section-title">Summary Statistics</span></div>', unsafe_allow_html=True)
+
     s1, s2, s3, s4 = st.columns(4)
-    with s1:
-        st.markdown(f"""
-        <div class="kpi-glass">
-            <div class="kpi-value" style="color: #ff4757;">{n_crit+n_high:,}</div>
-            <div class="kpi-label">Critical + High</div>
-            <div class="kpi-trend" style="color: #ff4757;">{(n_crit+n_high)/total*100:.1f}% of assets</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with s2:
-        st.markdown(f"""
-        <div class="kpi-glass">
-            <div class="kpi-value" style="color: #ffa502;">{n_defect:,}</div>
-            <div class="kpi-label">Defective Poles</div>
-            <div class="kpi-trend" style="color: #ffa502;">{n_defect/total*100:.1f}% of assets</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with s3:
-        st.markdown(f"""
-        <div class="kpi-glass">
-            <div class="kpi-value" style="color: #3d8eff;">{df['RISK_SCORE'].mean():.1f}</div>
-            <div class="kpi-label">Avg Risk Score</div>
-            <div class="kpi-trend" style="color: #3d8eff;">/100</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with s4:
-        top_ulp = df.groupby("ULP")["N_BURUK"].sum().idxmax() if "ULP" in df.columns else "—"
-        st.markdown(f"""
-        <div class="kpi-glass">
-            <div class="kpi-value" style="color: #a55eea;">{top_ulp}</div>
-            <div class="kpi-label">Top Risk ULP</div>
-            <div class="kpi-trend" style="color: #a55eea;">Highest defects</div>
-        </div>
-        """, unsafe_allow_html=True)
+    s1.metric("CRITICAL + HIGH",    f"{n_crit+n_high:,}", f"{(n_crit+n_high)/total*100:.1f}%")
+    s2.metric("Poles with Defects", f"{n_defect:,}",      f"{n_defect/total*100:.1f}%")
+    s3.metric("Avg Risk Score",     f"{avg_score:.1f}",   "/ 100")
+    s4.metric("Fleet Health Score", f"{health_score:.1f}",f"/ 100")
 
 # ── RISK ANALYSIS ─────────────────────────────────────────────
-elif "Risk Analysis" in page:
-    st.title("⚠️ Risk Analysis")
-    st.caption(f"{total:,} poles classified · worst-case per unique pole")
+elif page == "Risk Analysis":
+    st.markdown(f"""
+    <div class="hero-wrapper" style="padding:24px 28px;">
+        <div class="hero-eyebrow">Risk Assessment</div>
+        <div class="hero-title" style="font-size:32px;">⚠️ Risk Analysis</div>
+        <div class="hero-subtitle">{total:,} poles classified · worst-case per unique pole</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
 
@@ -1006,77 +1097,202 @@ elif "Risk Analysis" in page:
             color_discrete_map=COLORS,
             log_y=True,
         )
-        fig.update_traces(showlegend=False)
+        fig.update_traces(showlegend=False, marker_line_width=0)
         dark_layout(fig, "Risk Count (Log Scale)", 320)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
         fig2 = px.histogram(df, x="RISK_SCORE", color="RISK_CLASS",
                             color_discrete_map=COLORS, nbins=40,
-                            barmode="overlay", opacity=0.8)
+                            barmode="overlay", opacity=0.75)
         dark_layout(fig2, "Risk Score Distribution", 320)
         st.plotly_chart(fig2, use_container_width=True)
 
+    # Risk Heatmap — PHASE 3
+    st.markdown('<div class="section-header"><span class="section-icon">🗺️</span><span class="section-title">Risk Heatmap</span><span class="section-badge">ULP × PENYULANG</span></div>', unsafe_allow_html=True)
+
+    if "ULP" in df.columns and "PENYULANG" in df.columns:
+        risk_num = {"LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICAL": 4}
+        df["RISK_NUM"] = df["RISK_CLASS"].map(risk_num)
+        heatmap_data = (df.groupby(["ULP","PENYULANG"])["RISK_NUM"]
+                          .mean().reset_index())
+        pivot = heatmap_data.pivot(index="ULP", columns="PENYULANG", values="RISK_NUM")
+        fig_hm = go.Figure(go.Heatmap(
+            z=pivot.values,
+            x=pivot.columns.tolist(),
+            y=pivot.index.tolist(),
+            colorscale=[[0,"#00e5b0"],[0.33,"#0ea5e9"],[0.66,"#ff8c00"],[1,"#ff3355"]],
+            hovertemplate="ULP: %{y}<br>Feeder: %{x}<br>Avg Risk: %{z:.2f}<extra></extra>",
+            colorbar=dict(
+                title="Risk Level",
+                tickvals=[1,2,3,4],
+                ticktext=["LOW","MED","HIGH","CRIT"],
+                tickfont=dict(color=FONT_COL, size=10),
+                titlefont=dict(color=FONT_COL, size=11),
+            )
+        ))
+        fig_hm.update_layout(xaxis_tickangle=-45)
+        dark_layout(fig_hm, "Risk Heatmap — ULP × Feeder", 420)
+        st.plotly_chart(fig_hm, use_container_width=True)
+
+    # ULP horizontal bar
     ulp_risk = (df.groupby(["ULP","RISK_CLASS"])
                   .size().reset_index(name="count"))
     ulp_risk = ulp_risk[ulp_risk["RISK_CLASS"] != "LOW"]
     fig3 = px.bar(ulp_risk, y="ULP", x="count", color="RISK_CLASS",
                   color_discrete_map=COLORS, orientation="h", barmode="stack",
                   category_orders={"RISK_CLASS":["CRITICAL","HIGH","MEDIUM"]})
-    dark_layout(fig3, "CRITICAL + HIGH + MEDIUM by ULP", 350)
+    dark_layout(fig3, "CRITICAL + HIGH + MEDIUM by ULP", 380)
     st.plotly_chart(fig3, use_container_width=True)
 
+    # Risk Matrix — PHASE 3
+    st.markdown('<div class="section-header"><span class="section-icon">🎯</span><span class="section-title">Risk Matrix</span><span class="section-badge">Probability vs Impact</span></div>', unsafe_allow_html=True)
+
+    matrix_data = df.copy()
+    matrix_data["PROBABILITY"] = matrix_data["RISK_SCORE"] / 100
+    matrix_data["IMPACT"] = matrix_data["N_BURUK"] * 2 + matrix_data["N_KURANG"]
+
+    fig_matrix = px.scatter(
+        matrix_data.sample(min(500, len(matrix_data))),
+        x="PROBABILITY", y="IMPACT",
+        color="RISK_CLASS",
+        color_discrete_map=COLORS,
+        opacity=0.65,
+        size_max=10,
+        hover_data=["TIANG_ID","ULP"],
+    )
+    fig_matrix.add_hline(y=2, line_dash="dash", line_color="rgba(255,255,255,0.15)")
+    fig_matrix.add_vline(x=0.5, line_dash="dash", line_color="rgba(255,255,255,0.15)")
+    fig_matrix.update_traces(marker=dict(size=7, line=dict(width=0)))
+    dark_layout(fig_matrix, "Risk Matrix — Probability vs Impact", 380)
+    st.plotly_chart(fig_matrix, use_container_width=True)
+
 # ── HEALTH INDEX ──────────────────────────────────────────────
-elif "Health Index" in page:
-    st.title("🏥 Health Index Assessment")
-    st.caption("12 component categories · all inspection records")
+elif page == "Health Index":
+    st.markdown(f"""
+    <div class="hero-wrapper" style="padding:24px 28px;">
+        <div class="hero-eyebrow">Component Assessment</div>
+        <div class="hero-title" style="font-size:32px;">🏥 Health Index</div>
+        <div class="hero-subtitle">12 component categories · all inspection records</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     if not hi_df.empty:
+        # Stacked horizontal bar
         fig = go.Figure()
-        for cond, color in [("BAIK","#00d4aa"),("CUKUP","#3d8eff"),
-                             ("KURANG","#ffa502"),("BURUK","#ff4757")]:
+        for cond, color in [("BAIK","#00e5b0"),("CUKUP","#0ea5e9"),
+                             ("KURANG","#ff8c00"),("BURUK","#ff3355")]:
             fig.add_trace(go.Bar(
-                name=cond,
-                y=hi_df["Component"],
-                x=hi_df[cond],
-                orientation="h",
-                marker_color=color,
+                name=cond, y=hi_df["Component"], x=hi_df[cond],
+                orientation="h", marker_color=color,
                 hovertemplate=f"{cond}: %{{x:,}}<extra></extra>",
             ))
-        fig.update_layout(barmode="stack")
-        dark_layout(fig, "Component HI Distribution", 420)
+        fig.update_layout(barmode="stack", bargap=0.25)
+        dark_layout(fig, "Component Health Index Distribution", 440)
         st.plotly_chart(fig, use_container_width=True)
 
-        buruk_df = hi_df[hi_df["BURUK"] > 0].sort_values("BURUK", ascending=False)
-        if not buruk_df.empty:
-            col1, col2 = st.columns(2)
-            with col1:
+        col1, col2 = st.columns(2)
+
+        with col1:
+            buruk_df = hi_df[hi_df["BURUK"] > 0].sort_values("BURUK", ascending=False)
+            if not buruk_df.empty:
                 fig2 = px.bar(buruk_df, x="Component", y="BURUK",
-                              color_discrete_sequence=["#ff4757"])
+                              color_discrete_sequence=["#ff3355"])
+                fig2.update_traces(marker_line_width=0)
                 fig2.update_layout(xaxis_tickangle=-30)
                 dark_layout(fig2, "BURUK Count by Component", 300)
                 st.plotly_chart(fig2, use_container_width=True)
-            with col2:
-                kurang_df = hi_df[hi_df["KURANG"] > 0].sort_values("KURANG", ascending=False)
-                fig3 = px.bar(kurang_df, x="Component", y="KURANG",
-                              color_discrete_sequence=["#ffa502"])
-                fig3.update_layout(xaxis_tickangle=-30)
-                dark_layout(fig3, "KURANG Count by Component", 300)
-                st.plotly_chart(fig3, use_container_width=True)
+
+        with col2:
+            # Radar Chart — PHASE 3
+            hi_df["HEALTH_PCT"] = (hi_df["BAIK"] / (hi_df["BAIK"] + hi_df["CUKUP"] + hi_df["KURANG"] + hi_df["BURUK"]).replace(0,1) * 100).round(1)
+            fig_radar = go.Figure(go.Scatterpolar(
+                r=hi_df["HEALTH_PCT"].tolist() + [hi_df["HEALTH_PCT"].iloc[0]],
+                theta=hi_df["Component"].tolist() + [hi_df["Component"].iloc[0]],
+                fill="toself",
+                fillcolor="rgba(0,229,176,0.08)",
+                line=dict(color="#00e5b0", width=2),
+                marker=dict(size=5, color="#00e5b0"),
+                hovertemplate="%{theta}: %{r:.1f}%<extra></extra>",
+            ))
+            fig_radar.update_layout(
+                polar=dict(
+                    bgcolor=PLOT_BG,
+                    radialaxis=dict(visible=True, range=[0,100], gridcolor=GRID_COL,
+                                    tickfont=dict(size=9, color=FONT_COL), ticksuffix="%"),
+                    angularaxis=dict(gridcolor=GRID_COL, tickfont=dict(size=9, color=FONT_COL)),
+                )
+            )
+            dark_layout(fig_radar, "Component Health Radar", 300)
+            st.plotly_chart(fig_radar, use_container_width=True)
+
+        # KURANG bar
+        kurang_df = hi_df[hi_df["KURANG"] > 0].sort_values("KURANG", ascending=False)
+        if not kurang_df.empty:
+            fig3 = px.bar(kurang_df, x="Component", y="KURANG",
+                          color_discrete_sequence=["#ff8c00"])
+            fig3.update_traces(marker_line_width=0)
+            fig3.update_layout(xaxis_tickangle=-30)
+            dark_layout(fig3, "KURANG Count by Component", 300)
+            st.plotly_chart(fig3, use_container_width=True)
+
+        # Gauge Charts per ULP — PHASE 3
+        if "ULP" in df.columns:
+            st.markdown('<div class="section-header"><span class="section-icon">🎯</span><span class="section-title">Health Score by ULP</span><span class="section-badge">Gauge View</span></div>', unsafe_allow_html=True)
+
+            ulps = sorted(df["ULP"].dropna().unique().tolist())
+            n_ulps = len(ulps)
+            if n_ulps > 0:
+                cols_per_row = min(4, n_ulps)
+                gauge_rows = [ulps[i:i+cols_per_row] for i in range(0, n_ulps, cols_per_row)]
+                for row_ulps in gauge_rows:
+                    gcols = st.columns(len(row_ulps))
+                    for gi, ulp_name in enumerate(row_ulps):
+                        ulp_df = df[df["ULP"] == ulp_name]
+                        ulp_score = max(0, min(100, round(100 - ulp_df["RISK_SCORE"].mean(), 1)))
+                        clr = "#00e5b0" if ulp_score >= 70 else "#ff8c00" if ulp_score >= 40 else "#ff3355"
+                        fig_g = go.Figure(go.Indicator(
+                            mode="gauge+number",
+                            value=ulp_score,
+                            number=dict(suffix="", font=dict(color=clr, size=22, family="Rajdhani")),
+                            gauge=dict(
+                                axis=dict(range=[0,100], tickcolor=FONT_COL, tickfont=dict(size=9)),
+                                bar=dict(color=clr, thickness=0.25),
+                                bgcolor=PLOT_BG,
+                                borderwidth=0,
+                                steps=[
+                                    dict(range=[0,40],  color="rgba(255,51,85,0.08)"),
+                                    dict(range=[40,70], color="rgba(255,140,0,0.08)"),
+                                    dict(range=[70,100],color="rgba(0,229,176,0.08)"),
+                                ],
+                                threshold=dict(line=dict(color="white",width=1), value=70),
+                            ),
+                            title=dict(text=ulp_name, font=dict(size=11, color=FONT_COL)),
+                        ))
+                        dark_layout(fig_g, "", 220)
+                        gcols[gi].plotly_chart(fig_g, use_container_width=True)
 
         st.dataframe(
-            hi_df.style.background_gradient(subset=["BURUK","KURANG"],
-                                             cmap="RdYlGn_r"),
-            use_container_width=True, height=300
+            hi_df[["Component","BAIK","CUKUP","KURANG","BURUK","HEALTH_PCT"]]
+            .rename(columns={"HEALTH_PCT":"Health %"})
+            .style.background_gradient(subset=["BURUK","KURANG"], cmap="RdYlGn_r")
+                   .format({"Health %":"{:.1f}%"}),
+            use_container_width=True, height=320, hide_index=True
         )
 
 # ── THERMAL ───────────────────────────────────────────────────
-elif "Thermal" in page:
-    st.title("🌡️ Thermal Inspection — SUTMT2")
+elif page == "Thermal":
+    st.markdown(f"""
+    <div class="hero-wrapper" style="padding:24px 28px;">
+        <div class="hero-eyebrow">Infrared Thermal Inspection</div>
+        <div class="hero-title" style="font-size:32px;">🌡️ Thermal Analysis</div>
+        <div class="hero-subtitle">SUTMT2 · Temperature delta analysis · Phase R/S/T</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    t2_raw = load_from_drive(t2_id, "DATA")
+    t2_raw = load_from_drive(T2_FILE_ID, "DATA")
     if t2_raw.empty:
-        st.warning("لا توجد بيانات T2 أو File ID غير صحيح")
+        st.warning("No thermal data available.")
         st.stop()
 
     t2_raw["NUM_HI_1"] = t2_raw["HI SUTM  - 1"].map(HI_MAP).fillna(3)
@@ -1086,55 +1302,89 @@ elif "Thermal" in page:
     t2_raw["DELTA_SUHU"] = (vt.max(axis=1) - vt.min(axis=1)).fillna(0)
 
     c1,c2,c3,c4 = st.columns(4)
-    c1.metric("Thermal Records",  f"{len(t2_raw):,}")
-    c2.metric("Avg Δ Temp",       f"{t2_raw['DELTA_SUHU'].mean():.2f}°C")
-    c3.metric("High Temp (≥10°C)",f"{(t2_raw['DELTA_SUHU']>=10).sum():,}")
-    c4.metric("HI-1 BURUK",       f"{(t2_raw['NUM_HI_1']==0).sum():,}")
+    c1.metric("Thermal Records",   f"{len(t2_raw):,}")
+    c2.metric("Avg Δ Temp",        f"{t2_raw['DELTA_SUHU'].mean():.2f}°C")
+    c3.metric("High Temp (≥10°C)", f"{(t2_raw['DELTA_SUHU']>=10).sum():,}")
+    c4.metric("HI-1 BURUK",        f"{(t2_raw['NUM_HI_1']==0).sum():,}")
 
-    st.divider()
     col1, col2 = st.columns(2)
-
     lbl_map = {3:"BAIK",2:"CUKUP",1:"KURANG",0:"BURUK"}
+
     with col1:
         hi1 = t2_raw["NUM_HI_1"].map(lbl_map).value_counts().reset_index()
         hi1.columns = ["Condition","Count"]
-        fig = px.bar(hi1, x="Condition", y="Count",
-                     color="Condition",
-                     color_discrete_map={"BAIK":"#00d4aa","CUKUP":"#3d8eff",
-                                         "KURANG":"#ffa502","BURUK":"#ff4757"})
+        fig = px.bar(hi1, x="Condition", y="Count", color="Condition",
+                     color_discrete_map={"BAIK":"#00e5b0","CUKUP":"#0ea5e9",
+                                         "KURANG":"#ff8c00","BURUK":"#ff3355"})
+        fig.update_traces(marker_line_width=0)
         dark_layout(fig, "HI-1 Distribution", 300)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
         fig2 = px.histogram(t2_raw, x="DELTA_SUHU", nbins=40,
-                             color_discrete_sequence=["#a55eea"])
-        fig2.add_vline(x=10, line_dash="dash", line_color="#ffa502",
-                       annotation_text="10°C threshold")
-        fig2.add_vline(x=15, line_dash="dash", line_color="#ff4757",
-                       annotation_text="15°C critical")
+                            color_discrete_sequence=["#a855f7"])
+        fig2.add_vline(x=10, line_dash="dash", line_color="#ff8c00",
+                       annotation_text="10°C threshold",
+                       annotation_font_color="#ff8c00")
+        fig2.add_vline(x=15, line_dash="dash", line_color="#ff3355",
+                       annotation_text="15°C critical",
+                       annotation_font_color="#ff3355")
+        fig2.update_traces(marker_line_width=0)
         dark_layout(fig2, "Temperature Delta Distribution", 300)
         st.plotly_chart(fig2, use_container_width=True)
 
     if "ULP" in t2_raw.columns:
         fig3 = px.box(t2_raw, x="ULP", y="DELTA_SUHU", color="ULP",
-                      color_discrete_sequence=px.colors.qualitative.Set2)
+                      color_discrete_sequence=["#00e5b0","#0ea5e9","#ff8c00",
+                                               "#ff3355","#a855f7","#f59e0b"])
         fig3.update_layout(xaxis_tickangle=-30, showlegend=False)
-        dark_layout(fig3, "Thermal Delta by ULP", 320)
+        dark_layout(fig3, "Thermal Delta by ULP", 340)
         st.plotly_chart(fig3, use_container_width=True)
 
+    # Severity Timeline — PHASE 3
+    st.markdown('<div class="section-header"><span class="section-icon">📈</span><span class="section-title">Severity Timeline</span><span class="section-badge">Anomaly Detection</span></div>', unsafe_allow_html=True)
+
+    t2_sorted = t2_raw.copy().reset_index(drop=True)
+    t2_sorted["INDEX"] = range(len(t2_sorted))
+    t2_sorted["ANOMALY"] = t2_sorted["DELTA_SUHU"] >= 10
+
+    fig_tl = go.Figure()
+    fig_tl.add_trace(go.Scatter(
+        x=t2_sorted["INDEX"], y=t2_sorted["DELTA_SUHU"],
+        mode="lines", name="Δ Temp",
+        line=dict(color="rgba(59,130,246,0.5)", width=1),
+    ))
+    anomalies = t2_sorted[t2_sorted["ANOMALY"]]
+    fig_tl.add_trace(go.Scatter(
+        x=anomalies["INDEX"], y=anomalies["DELTA_SUHU"],
+        mode="markers", name="Anomaly ≥10°C",
+        marker=dict(color="#ff3355", size=5, symbol="circle",
+                    line=dict(width=0)),
+    ))
+    fig_tl.add_hline(y=10, line_dash="dash", line_color="rgba(255,140,0,0.4)",
+                     annotation_text="10°C Threshold")
+    fig_tl.add_hline(y=15, line_dash="dash", line_color="rgba(255,51,85,0.4)",
+                     annotation_text="15°C Critical")
+    dark_layout(fig_tl, "Severity Timeline — Temperature Anomaly Detection", 340)
+    st.plotly_chart(fig_tl, use_container_width=True)
+
 # ── ML COMPARISON ─────────────────────────────────────────────
-elif "ML Comparison" in page:
-    st.title("🤖 ML Model Comparison")
-    st.caption("5-fold stratified cross-validation · real SUTM data")
+elif page == "ML Comparison":
+    st.markdown(f"""
+    <div class="hero-wrapper" style="padding:24px 28px;">
+        <div class="hero-eyebrow">Machine Learning Benchmarks</div>
+        <div class="hero-title" style="font-size:32px;">🤖 ML Comparison</div>
+        <div class="hero-subtitle">5-fold stratified cross-validation · real SUTM data</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     ML_RESULTS = pd.DataFrame([
-        {"Model":"XGBoost",      "Accuracy":0.9342,"Precision":0.9385,"Recall":0.9342,"F1":0.9329,"Std":0.0136,"Color":"#00d4aa","Best":True},
-        {"Model":"Random Forest","Accuracy":0.8544,"Precision":0.8724,"Recall":0.8544,"F1":0.8578,"Std":0.0223,"Color":"#3d8eff","Best":False},
-        {"Model":"Decision Tree","Accuracy":0.8274,"Precision":0.8672,"Recall":0.8274,"F1":0.8396,"Std":0.0187,"Color":"#ffa502","Best":False},
-        {"Model":"SVM",          "Accuracy":0.7886,"Precision":0.8158,"Recall":0.7886,"F1":0.7937,"Std":0.0205,"Color":"#ff6b9d","Best":False},
-        {"Model":"KNN",          "Accuracy":0.7767,"Precision":0.7856,"Recall":0.7767,"F1":0.7685,"Std":0.0138,"Color":"#a55eea","Best":False},
+        {"Model":"XGBoost",       "Accuracy":0.9342,"Precision":0.9385,"Recall":0.9342,"F1":0.9329,"Std":0.0136,"Color":"#00e5b0","Best":True},
+        {"Model":"Random Forest", "Accuracy":0.8544,"Precision":0.8724,"Recall":0.8544,"F1":0.8578,"Std":0.0223,"Color":"#0ea5e9","Best":False},
+        {"Model":"Decision Tree", "Accuracy":0.8274,"Precision":0.8672,"Recall":0.8274,"F1":0.8396,"Std":0.0187,"Color":"#ff8c00","Best":False},
+        {"Model":"SVM",           "Accuracy":0.7886,"Precision":0.8158,"Recall":0.7886,"F1":0.7937,"Std":0.0205,"Color":"#ff6b9d","Best":False},
+        {"Model":"KNN",           "Accuracy":0.7767,"Precision":0.7856,"Recall":0.7767,"F1":0.7685,"Std":0.0138,"Color":"#a855f7","Best":False},
     ])
-
     FOLD_DATA = {
         "XGBoost":       [0.93,0.94,0.92,0.93,0.94],
         "Random Forest": [0.86,0.87,0.85,0.83,0.87],
@@ -1143,23 +1393,31 @@ elif "ML Comparison" in page:
         "KNN":           [0.77,0.77,0.76,0.77,0.77],
     }
 
-    cols = st.columns(5)
-    for i, row in ML_RESULTS.iterrows():
-        label = f"{'★ ' if row['Best'] else ''}{row['Model']}"
-        cols[i].metric(label, f"{row['F1']:.3f}",
-                       "Best ↑" if row["Best"] else f"±{row['Std']:.3f}")
+    # KPI Row
+    st.markdown(f"""
+    <div class="kpi-grid">
+        {"".join([
+            f'''<div class="kpi-card {'kpi-low' if row['Best'] else 'kpi-total'}">
+                <div class="kpi-label">{"★ BEST · " if row['Best'] else ""}{row['Model']}</div>
+                <div class="kpi-value" style="font-size:26px;color:{'#00e5b0' if row['Best'] else '#93c5fd'}">
+                    {row['F1']:.3f}
+                </div>
+                <span class="kpi-delta {'down' if row['Best'] else 'neu'}">
+                    F1 {"Best ↑" if row['Best'] else f"±{row['Std']:.3f}"}
+                </span>
+            </div>'''
+            for _, row in ML_RESULTS.iterrows()
+        ])}
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.divider()
     col1, col2 = st.columns(2)
-
     with col1:
         fig = go.Figure(go.Bar(
-            y=ML_RESULTS["Model"],
-            x=ML_RESULTS["F1"],
+            y=ML_RESULTS["Model"], x=ML_RESULTS["F1"],
             orientation="h",
-            marker_color=ML_RESULTS["Color"].tolist(),
-            text=ML_RESULTS["F1"].round(3),
-            textposition="outside",
+            marker=dict(color=ML_RESULTS["Color"].tolist(), line=dict(width=0)),
+            text=ML_RESULTS["F1"].round(3), textposition="outside",
         ))
         fig.update_layout(xaxis=dict(range=[0.6, 1.0]))
         dark_layout(fig, "F1-Score Comparison", 320)
@@ -1168,13 +1426,12 @@ elif "ML Comparison" in page:
     with col2:
         metrics = ["Accuracy","Precision","Recall","F1"]
         fig2 = go.Figure()
-        for m, color in zip(metrics, ["#00d4aa70","#3d8eff70","#ffa50270","#ff6b9d70"]):
+        for m, color in zip(metrics, ["#00e5b080","#0ea5e980","#ff8c0080","#ff6b9d80"]):
             fig2.add_trace(go.Bar(
                 name=m, x=ML_RESULTS["Model"],
-                y=ML_RESULTS[m], marker_color=color,
+                y=ML_RESULTS[m], marker=dict(color=color, line=dict(width=0)),
             ))
-        fig2.update_layout(barmode="group",
-                           yaxis=dict(range=[0.6, 1.0]))
+        fig2.update_layout(barmode="group", yaxis=dict(range=[0.6, 1.0]))
         dark_layout(fig2, "All Metrics — Grouped", 320)
         st.plotly_chart(fig2, use_container_width=True)
 
@@ -1183,10 +1440,9 @@ elif "ML Comparison" in page:
         fig3.add_trace(go.Scatter(
             x=[f"Fold {i+1}" for i in range(5)],
             y=FOLD_DATA[row["Model"]],
-            name=row["Model"],
-            mode="lines+markers",
+            name=row["Model"], mode="lines+markers",
             line=dict(color=row["Color"], width=2),
-            marker=dict(size=6),
+            marker=dict(size=6, line=dict(width=0)),
         ))
     fig3.update_layout(yaxis=dict(range=[0.7, 1.0]))
     dark_layout(fig3, "F1-Score per Fold — Stability Analysis", 300)
@@ -1194,23 +1450,29 @@ elif "ML Comparison" in page:
 
     st.dataframe(
         ML_RESULTS[["Model","Accuracy","Precision","Recall","F1","Std"]]
-        .style.highlight_max(subset=["F1"], color="#1D9E7544")
+        .style.highlight_max(subset=["F1"], color="#00e5b020")
                .format({"Accuracy":"{:.4f}","Precision":"{:.4f}",
                         "Recall":"{:.4f}","F1":"{:.4f}","Std":"±{:.4f}"}),
         use_container_width=True, hide_index=True
     )
 
 # ── PRIORITY POLES ────────────────────────────────────────────
-elif "Priority Poles" in page:
-    st.title("🎯 Priority Poles")
-    st.caption("Sorted by risk score — real pole IDs from SUTMT1")
+elif page == "Priority Poles":
+    st.markdown(f"""
+    <div class="hero-wrapper" style="padding:24px 28px;">
+        <div class="hero-eyebrow">Asset Priority Management</div>
+        <div class="hero-title" style="font-size:32px;">🎯 Priority Poles</div>
+        <div class="hero-subtitle">Sorted by risk score · real pole IDs from SUTMT1</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
     ulp_list = ["All"] + sorted(df["ULP"].dropna().unique().tolist())
-    sel_ulp   = col1.selectbox("Filter by ULP", ulp_list)
-    sel_risk  = col2.multiselect("Risk Class", ["CRITICAL","HIGH","MEDIUM","LOW"],
-                                  default=["CRITICAL","HIGH"])
-    top_n     = col3.slider("Top N poles", 10, 100, 20)
+    sel_ulp  = col1.selectbox("Filter by ULP", ulp_list)
+    sel_risk = col2.multiselect("Risk Class",
+                                ["CRITICAL","HIGH","MEDIUM","LOW"],
+                                default=["CRITICAL","HIGH"])
+    top_n    = col3.slider("Top N poles", 10, 100, 20)
 
     fdf = df.copy()
     if sel_ulp != "All":
@@ -1219,13 +1481,26 @@ elif "Priority Poles" in page:
         fdf = fdf[fdf["RISK_CLASS"].isin(sel_risk)]
     fdf = fdf.nlargest(top_n, "RISK_SCORE")
 
-    c1,c2,c3,c4 = st.columns(4)
-    c1.metric("Shown poles",    f"{len(fdf):,}")
-    c2.metric("CRITICAL",       f"{(fdf['RISK_CLASS']=='CRITICAL').sum():,}")
-    c3.metric("HIGH",           f"{(fdf['RISK_CLASS']=='HIGH').sum():,}")
-    c4.metric("Avg Risk Score", f"{fdf['RISK_SCORE'].mean():.1f}")
-
-    st.divider()
+    st.markdown(f"""
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="kpi-card kpi-total">
+            <div class="kpi-label">Shown Poles</div>
+            <div class="kpi-value" style="font-size:28px;">{len(fdf):,}</div>
+        </div>
+        <div class="kpi-card kpi-critical">
+            <div class="kpi-label">Critical</div>
+            <div class="kpi-value" style="font-size:28px;">{(fdf['RISK_CLASS']=='CRITICAL').sum():,}</div>
+        </div>
+        <div class="kpi-card kpi-high">
+            <div class="kpi-label">High</div>
+            <div class="kpi-value" style="font-size:28px;">{(fdf['RISK_CLASS']=='HIGH').sum():,}</div>
+        </div>
+        <div class="kpi-card kpi-medium">
+            <div class="kpi-label">Avg Risk Score</div>
+            <div class="kpi-value" style="font-size:28px;">{fdf['RISK_SCORE'].mean():.1f}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     fig = px.scatter(
         fdf, x="PENYULANG", y="RISK_SCORE",
@@ -1234,12 +1509,12 @@ elif "Priority Poles" in page:
         size_max=18,
     )
     fig.update_layout(xaxis_tickangle=-45)
-    dark_layout(fig, "Risk Score Distribution (Top Poles)", 320)
+    dark_layout(fig, "Risk Score Distribution — Top Poles", 340)
     st.plotly_chart(fig, use_container_width=True)
 
     def color_risk(val):
-        c = {"CRITICAL":"#ff475730","HIGH":"#ffa50230",
-             "MEDIUM":"#3d8eff30","LOW":"#00d4aa30"}.get(val,"")
+        c = {"CRITICAL":"rgba(255,51,85,0.15)","HIGH":"rgba(255,140,0,0.15)",
+             "MEDIUM":"rgba(14,165,233,0.15)","LOW":"rgba(0,229,176,0.15)"}.get(val,"")
         return f"background-color: {c}"
 
     display_df = fdf[["TIANG_ID","ULP","PENYULANG","NO TIANG",
@@ -1252,9 +1527,7 @@ elif "Priority Poles" in page:
         display_df.style
             .applymap(color_risk, subset=["Risk"])
             .format({"Score":"{:.1f}"}),
-        use_container_width=True,
-        height=450,
-        hide_index=True,
+        use_container_width=True, height=460, hide_index=True
     )
 
     csv = display_df.to_csv(index=False).encode("utf-8")
@@ -1264,154 +1537,176 @@ elif "Priority Poles" in page:
         use_container_width=True
     )
 
-# ── EXECUTIVE SUMMARY ─────────────────────────────────────────
-elif "Executive Summary" in page:
-    st.title("📋 Executive Summary")
-    st.caption("Management dashboard · high-level insights")
-    
-    # Executive KPIs
-    st.markdown("""
-    <div class="section-header">
-        <span class="section-title">Executive Overview</span>
-        <div class="section-line"></div>
+# ══════════════════════════════════════════════════════════════
+# PHASE 5 — EXECUTIVE SUMMARY PAGE
+# ══════════════════════════════════════════════════════════════
+elif page == "Executive Summary":
+    st.markdown(f"""
+    <div class="hero-wrapper" style="padding:28px 32px;">
+        <div class="hero-eyebrow">Management Report · PT PLN UP3 Bandung</div>
+        <div class="hero-title" style="font-size:36px;">📋 Executive Summary</div>
+        <div class="hero-subtitle">Asset health overview · Maintenance priorities · Generated {last_update}</div>
+        <div class="hero-badges">
+            <span class="badge badge-system">CONFIDENTIAL</span>
+            <span class="badge badge-ai">AI-GENERATED</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
-    
-    exec_cols = st.columns(4)
-    exec_data = [
-        ("Asset Health", f"{(n_low/total*100):.1f}%", "Healthy", "#00d4aa"),
-        ("Critical Assets", f"{n_crit}", "Immediate Action", "#ff4757"),
-        ("Avg Risk Score", f"{df['RISK_SCORE'].mean():.1f}", "/100", "#ffa502"),
-        ("Inspection Coverage", "100%", "Complete", "#3d8eff"),
-    ]
-    
-    for col, (title, value, subtitle, color) in zip(exec_cols, exec_data):
-        with col:
-            st.markdown(f"""
-            <div class="exec-card">
-                <div class="exec-card-title">{title}</div>
-                <div class="exec-card-value" style="color: {color};">{value}</div>
-                <div class="exec-card-subtitle">{subtitle}</div>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # AI Executive Insights
-    st.markdown("""
-    <div class="section-header">
-        <span class="section-title">AI Executive Insights</span>
-        <div class="section-line"></div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    if ai_insights:
-        for insight in ai_insights:
-            severity_color = {
-                "critical": "#ff4757",
-                "high": "#ffa502", 
-                "medium": "#3d8eff",
-                "low": "#00d4aa"
-            }.get(insight["severity"], "#ffa502")
-            
-            st.markdown(f"""
-            <div class="ai-insight" style="border-color: {severity_color}40; margin-bottom: 15px;">
-                <div class="ai-insight-header">
-                    <span class="ai-insight-icon">{insight["icon"]}</span>
-                    <span class="ai-insight-title" style="color: {severity_color};">{insight["title"]}</span>
-                </div>
-                <div class="ai-insight-text">{insight["text"]}</div>
-                <div class="ai-insight-recommendation" style="border-left-color: {severity_color};">
-                    <strong>Recommendation:</strong> {insight["recommendation"]}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # Risk Matrix
-    st.markdown("""
-    <div class="section-header">
-        <span class="section-title">Risk Matrix</span>
-        <div class="section-line"></div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Create risk matrix data
-    risk_matrix = df.groupby(["ULP", "RISK_CLASS"]).size().unstack(fill_value=0)
-    for col in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
-        if col not in risk_matrix.columns:
-            risk_matrix[col] = 0
-    
-    fig_matrix = px.imshow(
-        risk_matrix.values,
-        x=["CRITICAL", "HIGH", "MEDIUM", "LOW"],
-        y=risk_matrix.index,
-        color_continuous_scale="Reds",
-        aspect="auto",
-        title="Risk Concentration Matrix"
-    )
-    fig_matrix.update_traces(
-        text=risk_matrix.values,
-        texttemplate="%{z}",
-        textfont={"size": 12, "color": "white"},
-        hovertemplate="ULP: %{y}<br>Risk: %{x}<br>Count: %{z}<extra></extra>"
-    )
-    dark_layout(fig_matrix, "", 400)
-    st.plotly_chart(fig_matrix, use_container_width=True)
-    
-    # Top Critical ULPs
-    st.markdown("""
-    <div class="section-header">
-        <span class="section-title">Top Critical ULPs</span>
-        <div class="section-line"></div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    top_critical = df[df["RISK_CLASS"] == "CRITICAL"].groupby("ULP").size().sort_values(ascending=False).head(10)
-    if not top_critical.empty:
-        fig_top = px.bar(
-            x=top_critical.values,
-            y=top_critical.index,
-            orientation="h",
-            color=top_critical.values,
-            color_continuous_scale=["#ffa502", "#ff4757"],
-            labels={"x": "Critical Count", "y": "ULP"}
+
+    # Top row — Health Score + Quick Stats
+    col_score, col_stats = st.columns([1, 2])
+
+    with col_score:
+        clr_score = "#00e5b0" if health_score >= 70 else "#ff8c00" if health_score >= 40 else "#ff3355"
+        fig_gauge = go.Figure(go.Indicator(
+            mode="gauge+number+delta",
+            value=health_score,
+            delta=dict(reference=70, valueformat=".1f",
+                       increasing=dict(color="#00e5b0"),
+                       decreasing=dict(color="#ff3355")),
+            number=dict(suffix="", font=dict(color=clr_score, size=48, family="Rajdhani")),
+            gauge=dict(
+                axis=dict(range=[0,100], tickcolor=FONT_COL,
+                          tickfont=dict(size=10), nticks=6),
+                bar=dict(color=clr_score, thickness=0.3),
+                bgcolor=PLOT_BG, borderwidth=0,
+                steps=[
+                    dict(range=[0,40],  color="rgba(255,51,85,0.07)"),
+                    dict(range=[40,70], color="rgba(255,140,0,0.07)"),
+                    dict(range=[70,100],color="rgba(0,229,176,0.07)"),
+                ],
+                threshold=dict(line=dict(color="white",width=2), value=70),
+            ),
+            title=dict(text="Fleet Health Score", font=dict(size=13, color=FONT_COL)),
+        ))
+        dark_layout(fig_gauge, "", 300)
+        st.plotly_chart(fig_gauge, use_container_width=True)
+
+    with col_stats:
+        st.markdown('<div class="section-header"><span class="section-icon">📊</span><span class="section-title">Fleet Summary</span></div>', unsafe_allow_html=True)
+
+        r1c1, r1c2, r1c3 = st.columns(3)
+        r1c1.metric("Total Asset Poles",  f"{total:,}")
+        r1c2.metric("Requires Attention", f"{n_crit+n_high:,}", f"{(n_crit+n_high)/total*100:.1f}%")
+        r1c3.metric("Fleet Health",       f"{health_score:.1f}/100")
+
+        r2c1, r2c2, r2c3 = st.columns(3)
+        r2c1.metric("🔴 Critical",  f"{n_crit:,}",  f"{n_crit/total*100:.1f}%")
+        r2c2.metric("🟠 High",      f"{n_high:,}",  f"{n_high/total*100:.1f}%")
+        r2c3.metric("Top Risk ULP", top_risk_ulp)
+
+    # Maintenance Priority Matrix
+    st.markdown('<div class="section-header"><span class="section-icon">🎯</span><span class="section-title">Maintenance Priority Matrix</span><span class="section-badge">Top 8 ULPs</span></div>', unsafe_allow_html=True)
+
+    if "ULP" in df.columns:
+        ulp_summary = (df.groupby("ULP").agg(
+            TOTAL=("TIANG_ID","count"),
+            CRITICAL=("RISK_CLASS", lambda x: (x == "CRITICAL").sum()),
+            HIGH=("RISK_CLASS",     lambda x: (x == "HIGH").sum()),
+            AVG_SCORE=("RISK_SCORE","mean"),
+        ).reset_index())
+        ulp_summary["PRIORITY_SCORE"] = (
+            ulp_summary["CRITICAL"] * 4 + ulp_summary["HIGH"] * 2
         )
-        dark_layout(fig_top, "Critical Assets by ULP", 350)
-        st.plotly_chart(fig_top, use_container_width=True)
-    
+        ulp_summary = ulp_summary.sort_values("PRIORITY_SCORE", ascending=False).head(8)
+        ulp_summary["HEALTH"] = (100 - ulp_summary["AVG_SCORE"]).round(1)
+        ulp_summary["RISK_RATIO"] = ((ulp_summary["CRITICAL"] + ulp_summary["HIGH"])
+                                      / ulp_summary["TOTAL"] * 100).round(1)
+
+        cols = st.columns(2)
+        for i, (_, row) in enumerate(ulp_summary.iterrows()):
+            bar_w = min(100, int(row["RISK_RATIO"]))
+            risk_clr = "#ff3355" if row["RISK_RATIO"] > 30 else "#ff8c00" if row["RISK_RATIO"] > 15 else "#0ea5e9"
+            with cols[i % 2]:
+                st.markdown(f"""
+                <div class="priority-item">
+                    <div class="priority-rank">#{i+1} PRIORITY</div>
+                    <div class="priority-name">{row['ULP']}</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;
+                                color:#64748b;margin-top:6px;">
+                        {int(row['CRITICAL'])} CRITICAL &nbsp;·&nbsp; {int(row['HIGH'])} HIGH
+                        &nbsp;·&nbsp; {row['RISK_RATIO']}% risk ratio
+                    </div>
+                    <div class="priority-bar">
+                        <div class="priority-bar-fill"
+                             style="width:{bar_w}%;background:{risk_clr};"></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
     # Financial Impact Estimate
+    st.markdown('<div class="section-header"><span class="section-icon">💰</span><span class="section-title">Financial Impact Estimate</span><span class="section-badge">Indicative</span></div>', unsafe_allow_html=True)
+
+    cost_per_critical = 15_000_000   # IDR per pole (indicative)
+    cost_per_high     = 8_000_000
+    cost_per_medium   = 3_000_000
+    total_cost        = (n_crit * cost_per_critical +
+                         n_high * cost_per_high +
+                         n_med  * cost_per_medium)
+
+    fc1, fc2, fc3, fc4 = st.columns(4)
+    fc1.metric("Critical Maintenance Est.",
+               f"Rp {n_crit * cost_per_critical / 1e9:.2f}B",
+               f"{n_crit:,} poles × Rp 15M")
+    fc2.metric("High Risk Maintenance Est.",
+               f"Rp {n_high * cost_per_high / 1e9:.2f}B",
+               f"{n_high:,} poles × Rp 8M")
+    fc3.metric("Medium Maintenance Est.",
+               f"Rp {n_med * cost_per_medium / 1e9:.2f}B",
+               f"{n_med:,} poles × Rp 3M")
+    fc4.metric("Total Estimated Budget",
+               f"Rp {total_cost / 1e9:.2f}B",
+               "Indicative only")
+
     st.markdown("""
-    <div class="section-header">
-        <span class="section-title">Financial Impact Estimate</span>
-        <div class="section-line"></div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+                color:#475569;padding:8px 0;letter-spacing:0.5px;">
+    ⚠️ DISCLAIMER: Financial figures are indicative estimates for planning purposes only.
+    Actual costs depend on contractor rates, materials, and field conditions.
     </div>
     """, unsafe_allow_html=True)
-    
-    # Estimate costs
-    crit_cost = n_crit * 50000000  # 50M IDR per critical
-    high_cost = n_high * 25000000  # 25M IDR per high
-    total_cost = crit_cost + high_cost
-    
-    fin_cols = st.columns(3)
-    with fin_cols[0]:
-        st.markdown(f"""
-        <div class="kpi-glass kpi-glow-critical">
-            <div class="kpi-value" style="color: #ff4757;">Rp {crit_cost/1e9:.1f}B</div>
-            <div class="kpi-label">Critical Maintenance</div>
-            <div class="kpi-trend" style="color: #ff4757;">{n_crit} assets × Rp 50M</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with fin_cols[1]:
-        st.markdown(f"""
-        <div class="kpi-glass kpi-glow-high">
-            <div class="kpi-value" style="color: #ffa502;">Rp {high_cost/1e9:.1f}B</div>
-            <div class="kpi-label">High Risk Maintenance</div>
-            <div class="kpi-trend" style="color: #ffa502;">{n_high} assets × Rp 25M</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with fin_cols[2]:
-        st.markdown(f"""
-        <div class="kpi-glass">
-            <div class="kpi-value" style="color: #e8eaf0;">Rp {total_cost/1e9:.1f}B</div>
-            <div class="kpi-label">Total Estimated Cost</div>
-            <div class="kpi-trend" style="color: #3d8eff;">Combined impact</div>
-        </div>
-        """, unsafe_allow_html=True)
+
+    # Top Critical ULPs chart
+    st.markdown('<div class="section-header"><span class="section-icon">🏆</span><span class="section-title">Top 5 Critical ULPs</span></div>', unsafe_allow_html=True)
+
+    if "ULP" in df.columns:
+        top5 = (df[df["RISK_CLASS"]=="CRITICAL"]
+                .groupby("ULP").size()
+                .nlargest(5).reset_index(name="Critical Poles"))
+        fig_top5 = px.bar(
+            top5, x="ULP", y="Critical Poles",
+            color="Critical Poles",
+            color_continuous_scale=["#ff8c00","#ff3355"],
+            text="Critical Poles",
+        )
+        fig_top5.update_traces(textposition="outside", marker_line_width=0)
+        fig_top5.update_coloraxes(showscale=False)
+        dark_layout(fig_top5, "Top 5 ULPs by Critical Pole Count", 340)
+        st.plotly_chart(fig_top5, use_container_width=True)
+
+    # Export PDF button (placeholder — requires reportlab if enabled)
+    st.markdown('<div class="section-header"><span class="section-icon">📄</span><span class="section-title">Export Report</span></div>', unsafe_allow_html=True)
+
+    exec_data = {
+        "Metric": [
+            "Total Poles", "CRITICAL", "HIGH", "MEDIUM", "LOW",
+            "Fleet Health Score", "Avg Risk Score", "Top Risk ULP",
+            "Total Maintenance Est. (IDR Billion)"
+        ],
+        "Value": [
+            total, n_crit, n_high, n_med, n_low,
+            f"{health_score:.1f}/100",
+            f"{avg_score:.1f}/100",
+            top_risk_ulp,
+            f"Rp {total_cost/1e9:.2f}B"
+        ]
+    }
+    exec_df = pd.DataFrame(exec_data)
+    csv_exec = exec_df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "⬇️ Download Executive Summary (CSV)",
+        csv_exec,
+        f"executive_summary_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.csv",
+        "text/csv",
+        use_container_width=True
+    )
