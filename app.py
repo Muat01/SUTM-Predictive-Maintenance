@@ -730,6 +730,7 @@ def process_data(t1_id: str, t2_id: str):
     worst._hi_stats = hi_stats
     worst._t1_raw   = t1
     worst._t2_raw   = t2 if not t2.empty else pd.DataFrame()
+    worst._total_inspections = len(t1)
 
     return worst, pd.DataFrame(hi_stats)
 
@@ -915,6 +916,7 @@ if df.empty:
 # ── COMPUTED VALUES ───────────────────────────────────────────
 rc       = df["RISK_CLASS"].value_counts()
 total    = len(df)
+total_inspections = getattr(df, "_total_inspections", total)
 n_crit   = int(rc.get("CRITICAL", 0))
 n_high   = int(rc.get("HIGH",     0))
 n_med    = int(rc.get("MEDIUM",   0))
@@ -937,7 +939,7 @@ if page == "Overview":
     <div class="hero-wrapper">
         <div class="hero-eyebrow">PT PLN UP3 Bandung · SUTM Asset Intelligence Platform</div>
         <div class="hero-title">⚡ AI Predictive Maintenance</div>
-        <div class="hero-subtitle">Real-time SUTM Asset Intelligence · Powered by Machine Learning</div>
+        <div class="hero-subtitle">Real-time SUTM Asset Intelligence · Powered by Machine Learning · <span style="color:#64748b;">{total:,} unique poles · {total_inspections:,} total inspections</span></div>
         <div class="hero-badges">
             <span class="badge badge-live">LIVE MONITORING</span>
             <span class="badge badge-system">SUTM NETWORK</span>
