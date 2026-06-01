@@ -25,7 +25,7 @@ T2_FILE_ID = "11lllTP3-mzDG4KOEVyJX6RaDc1n8bTbq"
 PLN_LOGO_URL = "https://i.ibb.co/V9VnZ55N/Logo-PLN-Indonesia-Power-Services.png"
 
 # ══════════════════════════════════════════════════════════════
-# 2. SIDEBAR CONTROLS (أزرار التحكم بالمظهر واللغة أعلى الشريط الجانبي)
+# 2. SIDEBAR CONTROLS
 # ══════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown(f"""
@@ -39,7 +39,6 @@ with st.sidebar:
     
     st.markdown("<hr style='margin: 15px 0; border-color: rgba(0, 90, 156, 0.15);'>", unsafe_allow_html=True)
     
-    # عناصر التحكم مجمعة بشكل أنيق داخل الـ Sidebar
     theme_choice = st.segmented_control(
         "🎨 Mode / المظهر",
         options=["Dark Mode 🌙", "Light Mode ☀️"],
@@ -99,14 +98,14 @@ TR = TRANSLATIONS[lang_choice]
 is_light = "Light" in str(theme_choice)
 
 # ══════════════════════════════════════════════════════════════
-# 3. DYNAMIC THEME CSS SYSTEM (حقن الألوان الديناميكية ومكافحة الأخطاء)
+# 3. DYNAMIC THEME CSS SYSTEM
 # ══════════════════════════════════════════════════════════════
 bg_base = "#f8fafc" if is_light else "#030712"
 bg_card = "#ffffff" if is_light else "#0b1329"
 bg_sidebar = "#f1f5f9" if is_light else "#01040a"
 clr_text = "#0f172a" if is_light else "#f8fafc"
-clr_muted = "#64748b"
-clr_border = "rgba(0, 90, 156, 0.15)" if is_light else "rgba(0, 90, 156, 0.25)"
+clr_muted = "#475569" if is_light else "#94a3b8"
+clr_border = "rgba(0, 90, 156, 0.2)" if is_light else "rgba(0, 90, 156, 0.25)"
 hero_gradient = "linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)" if is_light else "linear-gradient(135deg, #0b1329 0%, #00253e 100%)"
 hero_title_clr = "#0f172a" if is_light else "#ffffff"
 
@@ -140,7 +139,6 @@ html, body, .stApp {{ background-color: var(--bg-base) !important; color: var(--
 .stDeployButton {{ display: none; }}
 [data-testid="stToolbar"] {{ display: none; }}
 
-/* Sidebar Container layout */
 [data-testid="stSidebar"] {{
     background: var(--bg-sidebar) !important;
     border-right: 2px solid var(--clr-border);
@@ -148,7 +146,6 @@ html, body, .stApp {{ background-color: var(--bg-base) !important; color: var(--
 
 .nav-section-title {{ font-family: var(--font-mono); font-size: 10px; color: var(--clr-muted); letter-spacing: 2px; text-transform: uppercase; padding: 20px 10px 8px; }}
 
-/* Hero Widget config */
 .hero-wrapper {{
     background: {hero_gradient};
     border-left: 5px solid var(--clr-accent);
@@ -161,7 +158,6 @@ html, body, .stApp {{ background-color: var(--bg-base) !important; color: var(--
 .hero-subtitle {{ font-size: 13px; color: var(--clr-muted); font-family: var(--font-mono); }}
 .hero-logo-embed {{ height: 55px; object-fit: contain; margin-left: 20px; }}
 
-/* KPI Matrix grid cards */
 .kpi-grid {{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 25px; }}
 .kpi-card {{ background: var(--bg-card); border-radius: 12px; padding: 20px 16px; border: 1px solid var(--clr-border); position: relative; overflow: hidden; }}
 .kpi-card::before {{ content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }}
@@ -271,7 +267,7 @@ if st.session_state.master_payload is None:
 data = st.session_state.master_payload
 
 # ══════════════════════════════════════════════════════════════
-# 5. SIDEBAR ROUTER PANEL (قائمة التصفح داخل الشريط الجانبي)
+# 5. SIDEBAR ROUTER PANEL
 # ══════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown(f'<div class="nav-section-title">{TR["nav_title"]}</div>', unsafe_allow_html=True)
@@ -280,12 +276,11 @@ with st.sidebar:
     active_page = PAGES_MAP[active_page_localized]
 
 # ══════════════════════════════════════════════════════════════
-# 6. MAIN APP SPACE
+# 6. MAIN APP SPACE WITH LIGHT-MODE CONTRAST FIX
 # ══════════════════════════════════════════════════════════════
 if data is None:
     st.error("❌ Failed to establish cloud database syncing.")
 else:
-    # طباعة كود واجهة العرض مترجمة لحظياً
     st.markdown(f"""
     <div class="hero-wrapper">
         <div class="hero-content">
@@ -300,15 +295,31 @@ else:
     paper_bg = "#ffffff" if is_light else "#0b1329"
     plot_bg = "#f8fafc" if is_light else "#030712"
     
+    # تحسين دقة ووضوح الألوان والمحاور في التبديل بين اللحظات (Fix Contrast)
+    grid_color_calculated = "rgba(15, 23, 42, 0.15)" if is_light else "rgba(255,255,255,0.03)"
+    zeroline_color_calculated = "rgba(15, 23, 42, 0.3)" if is_light else "rgba(255,255,255,0.1)"
+    
     def apply_pln_layout(fig, title_text):
         fig.update_layout(
             title=dict(text=title_text, font=dict(family="Rajdhani", size=16, color=clr_text)),
             paper_bgcolor=paper_bg, plot_bgcolor=plot_bg,
             font=dict(color=clr_text, family="Inter"),
             margin=dict(l=15, r=15, t=45, b=15),
-            xaxis=dict(gridcolor="rgba(0,0,0,0.05)" if is_light else "rgba(255,255,255,0.03)", zeroline=False),
-            yaxis=dict(gridcolor="rgba(0,0,0,0.05)" if is_light else "rgba(255,255,255,0.03)", zeroline=False)
+            xaxis=dict(
+                gridcolor=grid_color_calculated, 
+                zeroline=True, 
+                zerolinecolor=zeroline_color_calculated,
+                tickfont=dict(color=clr_text)
+            ),
+            yaxis=dict(
+                gridcolor=grid_color_calculated, 
+                zeroline=True, 
+                zerolinecolor=zeroline_color_calculated,
+                tickfont=dict(color=clr_text)
+            )
         )
+        # إصلاح ألوان نصوص الـ Legend لتتكيف مع الخلفية البيضاء
+        fig.update_layout(legend=dict(font=dict(color=clr_text)))
         return fig
 
     # PAGE 1: OVERVIEW
