@@ -22,30 +22,94 @@ st.set_page_config(
 T1_FILE_ID = "1FegD5m87H-kT-GgkNyS6xLMyW9UJa2Sa"
 T2_FILE_ID = "11lllTP3-mzDG4KOEVyJX6RaDc1n8bTbq"
 
-# الرابط المستخرج من صورتك بدقة عالية
 PLN_LOGO_URL = "https://i.ibb.co/V9VnZ55N/Logo-PLN-Indonesia-Power-Services.png"
 
 # ══════════════════════════════════════════════════════════════
-# 2. CORPORATE COLOR BRANDING & ANTI-FLICKER SYSTEM
+# 2. CONFIG BAR IN UPPER HUD (أزرار التحكم باللغة والوضع العلوي)
 # ══════════════════════════════════════════════════════════════
+hud_col1, hud_col2 = st.columns([4, 1])
+
+with hud_col2:
+    with st.popover("⚙️ Settings / الإعدادات", use_container_width=True):
+        theme_choice = st.radio("🎨 Theme / المظهر", ["Dark Mode 🌙", "Light Mode ☀️"], horizontal=True)
+        lang_choice = st.selectbox("🌐 Language / اللغة", ["العربية", "English", "Bahasa Indonesia"])
+
+# قاموس الترجمة الفوري ذو الاستجابة اللحظية لحماية السرعة
+TRANSLATIONS = {
+    "العربية": {
+        "title": "نظام PLN SUTM <span>للصيانة التنبؤية</span> الذكي",
+        "subtitle": "عمود كهربائي فريد تم رصده · سجل فحص تاريخي تم تحميله فوراً",
+        "total_assets": "إجمالي أصول الشبكة",
+        "crit_risk": "🔴 خطر حرج",
+        "high_risk": "🟠 خطر مرتفع",
+        "med_risk": "🔵 خطر متوسط",
+        "low_risk": "🟢 خطر منخفض",
+        "nav_title": "اختر لوحة التحليلات",
+        "p1": "لوحة العرض العامة", "p2": "تصنيف درجات الخطورة", "p3": "مؤشر صحة المكونات", "p4": "التصوير الحراري والـ Hotspots", "p5": "مقارنة نماذج الذكاء الاصطناعي", "p6": "قائمة الأعمدة ذات الأولوية قصوى", "p7": "الملخص التنفيذي للمدراء",
+        "health_label": "مؤشر الصحة العالمي للشبكة", "insights_title": "🧠 رؤى ومؤشرات النظام الآلي",
+        "matrix_title": "🎯 مصفوفة ترتيب أولويات الصيانة بحسب فروع الـ ULP"
+    },
+    "English": {
+        "title": "PLN SUTM <span>Predictive Maintenance</span> System",
+        "subtitle": "UNIQUE UTILITY POLES DETECTED · HISTORICAL INSPECTION LOGS RENDERED INSTANTLY",
+        "total_assets": "TOTAL FLEET ASSETS",
+        "crit_risk": "🔴 CRITICAL RISK",
+        "high_risk": "🟠 HIGH RISK",
+        "med_risk": "🔵 MEDIUM RISK",
+        "low_risk": "🟢 LOW RISK",
+        "nav_title": "Select Intelligence Page",
+        "p1": "Overview Dashboard", "p2": "Risk Classification", "p3": "Component Health Index", "p4": "Hotspot Thermography", "p5": "Predictive ML Comparison", "p6": "Priority Poles List", "p7": "Executive Summary",
+        "health_label": "GLOBAL HEALTH SCORE", "insights_title": "🧠 AI Core System Insights",
+        "matrix_title": "🎯 Maintenance Priority Rank Matrix by Branch ULP"
+    },
+    "Bahasa Indonesia": {
+        "title": "Sistem <span>Pemeliharaan Prediktif</span> PLN SUTM",
+        "subtitle": "TIANG UTILITAS UNIK TERDETEKSI · LOG INSPEKSI HISTORIS DIMUAT INSTAN",
+        "total_assets": "TOTAL ASET ARMADA",
+        "crit_risk": "🔴 RISIKO KRITIS",
+        "high_risk": "🟠 RISIKO TINGGI",
+        "med_risk": "🔵 RISIKO SEDANG",
+        "low_risk": "🟢 RISIKO RENDAH",
+        "nav_title": "Pilih Halaman Intelijen",
+        "p1": "Dasbor Ringkasan", "p2": "Klasifikasi Risiko", "p3": "Indeks Kesehatan Komponen", "p4": "Termografi Hotspot", "p5": "Perbandingan ML Prediktif", "p6": "Daftar Tiang Prioritas Utama", "p7": "Ringkasan Eksekutif",
+        "health_label": "SKOR KESEHATAN GLOBAL", "insights_title": "🧠 Wawasan Inti Sistem AI",
+        "matrix_title": "🎯 Matriks Peringkat Prioritas Pemeliharaan berdasarkan Cabang ULP"
+    }
+}
+
+TR = TRANSLATIONS[lang_choice]
+is_light = "Light" in theme_choice
+
+# ══════════════════════════════════════════════════════════════
+# 3. DYNAMIC THEME CSS SYSTEM (التبديل اللحظي بين الفاتح والمظلم)
+# ══════════════════════════════════════════════════════════════
+bg_base = "#f8fafc" if is_light else "#030712"
+bg_card = "#ffffff" if is_light else "#0b1329"
+bg_sidebar = "#f1f5f9" if is_light else "#01040a"
+clr-text = "#0f172a" if is_light else "#f8fafc"
+clr-muted = "#64748b"
+clr-border = "rgba(0, 90, 156, 0.15)" if is_light else "rgba(0, 90, 156, 0.25)"
+hero_gradient = "linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)" if is_light else "linear-gradient(135deg, #0b1329 0%, #00253e 100%)"
+hero_title_clr = "#0f172a" if is_light else "#ffffff"
+
 st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600&display=swap');
 
 :root {{
-    --bg-base:       #030712;
-    --bg-card:       #0b1329;
-    --bg-sidebar:    #01040a;
+    --bg-base:       {bg_base};
+    --bg-card:       {bg_card};
+    --bg-sidebar:    {bg_sidebar};
     --clr-critical:  #ff3355;
     --clr-high:      #ff8c00;
     --clr-medium:    #006bb3;
     --clr-low:       #00a896;
-    --clr-accent:    #005A9C; /* الأزرق الملكي من الشعار */
-    --clr-yellow:    #FFD600; /* الأصفر المضيء من الشعار */
-    --clr-teal:      #00A3A6; /* التيل الثانوي للشعار */
-    --clr-text:      #f8fafc;
-    --clr-muted:     #64748b;
-    --clr-border:    rgba(0, 90, 156, 0.25);
+    --clr-accent:    #005A9C;
+    --clr-yellow:    #FFD600;
+    --clr-teal:      #00A3A6;
+    --clr-text:      {clr-text};
+    --clr-muted:     {clr-muted};
+    --clr-border:    {clr-border};
     --font-display:  'Rajdhani', sans-serif;
     --font-mono:     'JetBrains Mono', monospace;
     --font-body:     'Inter', sans-serif;
@@ -58,7 +122,7 @@ html, body, .stApp {{ background-color: var(--bg-base) !important; color: var(--
 .stDeployButton {{ display: none; }}
 [data-testid="stToolbar"] {{ display: none; }}
 
-/* تصميم القائمة الجانبية الفاخر مع الشعار الجديد */
+/* Sidebar Design styling */
 [data-testid="stSidebar"] {{
     background: var(--bg-sidebar) !important;
     border-right: 2px solid var(--clr-border);
@@ -69,65 +133,28 @@ html, body, .stApp {{ background-color: var(--bg-base) !important; color: var(--
     padding: 30px 20px 20px;
     border-bottom: 1px solid var(--clr-border);
     text-align: center;
-    background: linear-gradient(to bottom, rgba(0, 90, 156, 0.05), transparent);
 }}
-.sidebar-logo-img {{
-    width: 100%;
-    max-width: 190px;
-    height: auto;
-    object-fit: contain;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
-}}
-.pln-sub-text {{
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: var(--clr-yellow);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-top: 10px;
-}}
+.sidebar-logo-img {{ width: 100%; max-width: 190px; height: auto; object-fit: contain; }}
+.pln-sub-text {{ font-family: var(--font-mono); font-size: 9px; color: var(--clr-accent); letter-spacing: 2px; text-transform: uppercase; margin-top: 10px; }}
 
-/* العناوين والتقسيمات داخل القائمة الجانبية */
-.nav-section-title {{
-    font-family: var(--font-mono); font-size: 10px; color: var(--clr-muted);
-    letter-spacing: 2px; text-transform: uppercase; padding: 25px 20px 8px;
-}}
-.stSelectbox > div > div {{
-    background: var(--bg-card) !important;
-    border: 1px solid var(--clr-border) !important;
-    border-radius: 8px !important;
-}}
+.nav-section-title {{ font-family: var(--font-mono); font-size: 10px; color: var(--clr-muted); letter-spacing: 2px; text-transform: uppercase; padding: 25px 20px 8px; }}
 
-/* واجهة العرض الرئيسية الـ HERO PANEL */
+/* Hero Wrapper config */
 .hero-wrapper {{
-    background: linear-gradient(135deg, #0b1329 0%, #00253e 100%);
-    border-left: 5px solid var(--clr-yellow);
-    border-right: 1px solid var(--clr-border);
-    border-top: 1px solid var(--clr-border);
-    border-bottom: 1px solid var(--clr-border);
-    border-radius: 12px;
-    padding: 30px;
-    margin-bottom: 25px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    background: {hero_gradient};
+    border-left: 5px solid var(--clr-accent);
+    border-right: 1px solid var(--clr-border); border-top: 1px solid var(--clr-border); border-bottom: 1px solid var(--clr-border);
+    border-radius: 12px; padding: 30px; margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;
 }}
-.hero-content {{ flex: 1; }}
-.hero-title {{
-    font-family: var(--font-display); font-size: 38px; font-weight: 700; line-height: 1.1;
-    color: #ffffff; margin: 0 0 6px 0;
-}}
-.hero-title span {{ color: var(--clr-yellow); }}
-.hero-subtitle {{ font-size: 13.5px; color: #94a3b8; font-family: var(--font-mono); letter-spacing: 0.5px; }}
-.hero-logo-embed {{ height: 60px; object-fit: contain; margin-left: 20px; filter: drop-shadow(0 0 10px rgba(0,90,156,0.3)); }}
+.hero-title {{ font-family: var(--font-display); font-size: 38px; font-weight: 700; line-height: 1.1; color: {hero_title_clr}; margin: 0 0 6px 0; }}
+.hero-title span {{ color: var(--clr-accent); }}
+.hero-subtitle {{ font-size: 13.5px; color: var(--clr-muted); font-family: var(--font-mono); }}
+.hero-logo-embed {{ height: 60px; object-fit: contain; margin-left: 20px; }}
 
-/* شبكة كروت الـ KPI الحيوية */
+/* KPI Cards architecture */
 .kpi-grid {{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 25px; }}
-.kpi-card {{
-    background: var(--bg-card); border-radius: 12px; padding: 20px 16px; border: 1px solid var(--clr-border);
-    position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}}
+.kpi-card {{ background: var(--bg-card); border-radius: 12px; padding: 20px 16px; border: 1px solid var(--clr-border); position: relative; overflow: hidden; }}
 .kpi-card::before {{ content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }}
 .kpi-critical::before {{ background: var(--clr-critical); }}
 .kpi-high::before     {{ background: var(--clr-high); }}
@@ -136,52 +163,20 @@ html, body, .stApp {{ background-color: var(--bg-base) !important; color: var(--
 .kpi-total::before    {{ background: var(--clr-accent); }}
 
 .kpi-label {{ font-family: var(--font-mono); font-size: 9px; color: var(--clr-muted); letter-spacing: 1px; text-transform: uppercase; }}
-.kpi-value {{ font-family: var(--font-display); font-size: 34px; font-weight: 700; margin-top: 4px; }}
-.kpi-critical .kpi-value {{ color: var(--clr-critical); }}
-.kpi-high .kpi-value {{ color: var(--clr-high); }}
-.kpi-medium .kpi-value {{ color: var(--clr-medium); }}
-.kpi-low .kpi-value {{ color: var(--clr-low); }}
+.kpi-value {{ font-family: var(--font-display); font-size: 34px; font-weight: 700; margin-top: 4px; color: var(--clr-text); }}
 
-/* كروت التحليلات الذكية */
-.insight-card {{
-    background: #0d1e3d; border-radius: 10px; padding: 16px; margin-bottom: 12px;
-    border-left: 4px solid var(--clr-accent);
-}}
-.insight-card.critical {{ border-left-color: var(--clr-critical); background: rgba(255,51,85,0.04); }}
-.insight-card.high {{ border-left-color: var(--clr-high); background: rgba(255,140,0,0.04); }}
+.insight-card {{ background: var(--bg-sidebar); border-radius: 10px; padding: 16px; margin-bottom: 12px; border-left: 4px solid var(--clr-accent); }}
 .priority-item {{ background: var(--bg-card); border-radius: 10px; padding: 14px; border: 1px solid var(--clr-border); margin-bottom: 10px; }}
-.priority-bar {{ height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; margin-top: 8px; overflow: hidden; }}
+.priority-bar {{ height: 6px; background: rgba(0,0,0,0.05); border-radius: 3px; margin-top: 8px; overflow: hidden; }}
 
-/* ضمان الثبات وتثبيت أبعاد الرسوم البيانية لسرعة مذهلة */
-.stPlotlyChart, div[data-testid="metric-container"] {{
-    opacity: 1 !important;
-    transition: opacity 0.2s ease-in;
-    min-height: 100px;
-}}
-
-/* تصميم شاشة الهياكل الجاهزة للتحميل الأولي فقط */
-.skeleton {{ background: linear-gradient(90deg, #0b1329 25%, #15254c 50%, #0b1329 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 10px; }}
-@keyframes shimmer {{ 0% {{ background-position: 200% 0; }} 100% {{ background-position: -200% 0; }} }}
-.skeleton-hero {{ height: 150px; width: 100%; margin-bottom: 25px; }}
-.skeleton-kpi-container {{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 25px; }}
-.skeleton-kpi {{ height: 105px; }}
+.stPlotlyChart, div[data-testid="metric-container"] {{ opacity: 1 !important; min-height: 100px; }}
 </style>
 """, unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════
-# 3. HIGH-SPEED MEMORY CACHE LOADING ENGINE
+# 4. HIGH-SPEED MEMORY CACHE LOADING ENGINE
 # ══════════════════════════════════════════════════════════════
-HI_MAP = {"BAIK": 3, "CUKUP": 2, "KURANG": 1, "BURUK": 0}
-
-def hi_from_text(val):
-    if pd.isna(val) or str(val).strip().upper() in ["BLANK", "TIDAK ADA", "-", ""]: return 3
-    v = str(val).upper()
-    if any(x in v for x in ["BURUK","PECAH","PUTUS","KEROPOS","FLASH","BOCOR","RANTAS","RETAK"]): return 0
-    if any(x in v for x in ["KURANG","KENDOR","LEPAS","MIRING","LONGGAR","BELUM","RAMBAT"]): return 1
-    if any(x in v for x in ["CUKUP","LUMUT","BERKARAT","PARALON"]): return 2
-    return 3
-
-@st.cache_data(ttl=600) # كاش طويل الأمد لضمان السرعة الصاروخية ومجابهة البطء
+@st.cache_data(ttl=600)
 def load_and_compile_master_data(t1_id: str, t2_id: str):
     try:
         creds_info = st.secrets["google_service_account"]
@@ -206,7 +201,14 @@ def load_and_compile_master_data(t1_id: str, t2_id: str):
     except Exception:
         return None
 
-    # المعالجة الحسابية السريعة ومسح الأخطاء لمرة واحدة فقط بالفولدر المؤقت
+    def hi_from_text(val):
+        if pd.isna(val) or str(val).strip().upper() in ["BLANK", "TIDAK ADA", "-", ""]: return 3
+        v = str(val).upper()
+        if any(x in v for x in ["BURUK","PECAH","PUTUS","KEROPOS","FLASH","BOCOR","RANTAS","RETAK"]): return 0
+        if any(x in v for x in ["KURANG","KENDOR","LEPAS","MIRING","LONGGAR","BELUM","RAMBAT"]): return 1
+        if any(x in v for x in ["CUKUP","LUMUT","BERKARAT","PARALON"]): return 2
+        return 3
+
     cond_cols = ["KONDISI TIANG", "KONDISI EKSTENSI", "KONDISI TRAVERS", "KONDISI GSW", "KONDISI PENYANGGA TIANG", "KONDISI PENAMPANG", "KONDISI JUMPER", "KONDISI PENGIKAT", "KONDISI ISOLATOR TUMPU", "KONDISI ISOLATOR AFSPAN", "KONDISI ARRESTER", "KONDISI FCO"]
     for c in cond_cols:
         if c in t1.columns: t1[f"HI_{c}"] = t1[c].apply(hi_from_text)
@@ -251,35 +253,16 @@ def load_and_compile_master_data(t1_id: str, t2_id: str):
         "health_score": 100.0 - float(worst["RISK_SCORE"].mean())
     }
 
-# ══════════════════════════════════════════════════════════════
-# 4. INITIALIZE SESSION STATE DATA (التخزين لمرة واحدة)
-# ══════════════════════════════════════════════════════════════
 if "master_payload" not in st.session_state:
     st.session_state.master_payload = None
 
 if st.session_state.master_payload is None:
-    skeleton_box = st.empty()
-    with skeleton_box.container():
-        st.markdown(f"""
-        <div style="padding:16px; background:#0b1329; border-radius:10px; border:1px solid rgba(0,90,156,0.3); margin-bottom:20px; display:flex; align-items:center; gap:15px;">
-            <img src="{PLN_LOGO_URL}" style="height:35px; object-fit:contain;">
-            <div style="font-family:'Rajdhani',sans-serif; color:#FFD600; font-weight:600; font-size:15px; letter-spacing:0.5px;">INITIALIZING COGNITIVE ANALYTICS ENGINE (PLN SERVICES)...</div>
-        </div>
-        <div class="skeleton skeleton-hero"></div>
-        <div class="skeleton-kpi-container">
-            <div class="skeleton skeleton-kpi"></div>
-            <div class="skeleton skeleton-kpi"></div>
-            <div class="skeleton skeleton-kpi"></div>
-        </div>
-        """, unsafe_allow_html=True)
-        
     st.session_state.master_payload = load_and_compile_master_data(T1_FILE_ID, T2_FILE_ID)
-    skeleton_box.empty()
 
 data = st.session_state.master_payload
 
 # ══════════════════════════════════════════════════════════════
-# 5. SIDEBAR NAVIGATION BRANDING
+# 5. SIDEBAR NAVIGATION BRANDING (ربط لغات الواجهة بالقائمة)
 # ══════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown(f"""
@@ -289,51 +272,53 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown('<div class="nav-section-title">Select Intelligence Page</div>', unsafe_allow_html=True)
-    PAGES = ["Overview Dashboard", "Risk Classification", "Component Health Index", "Hotspot Thermography", "Predictive ML Comparison", "Priority Poles List", "Executive Summary"]
-    active_page = st.selectbox("Navigation Router", PAGES, label_visibility="collapsed")
+    st.markdown(f'<div class="nav-section-title">{TR["nav_title"]}</div>', unsafe_allow_html=True)
+    PAGES_MAP = {TR["p1"]: "p1", TR["p2"]: "p2", TR["p3"]: "p3", TR["p4"]: "p4", TR["p5"]: "p5", TR["p6"]: "p6", TR["p7"]: "p7"}
+    active_page_localized = st.selectbox("Navigation Router", list(PAGES_MAP.keys()), label_visibility="collapsed")
+    active_page = PAGES_MAP[active_page_localized]
 
 # ══════════════════════════════════════════════════════════════
-# 6. APP RENDERING WORKSPACE (ZERO LATENCY SPREAD)
+# 6. APP RENDERING WORKSPACE
 # ══════════════════════════════════════════════════════════════
 if data is None:
-    st.error("❌ Failed to establish cloud database syncing. Check secrets tokens.")
+    st.error("❌ Failed to establish cloud database syncing.")
 else:
-    # HERO PANEL INJECTION WITH INCORPORATED LOGO (دمج الشعار الثاني داخل لوحة العرض الكبرى)
+    # طباعة كود واجهة العرض مترجمة لحظياً بحسب اختيار المدير
     st.markdown(f"""
     <div class="hero-wrapper">
         <div class="hero-content">
-            <div class="hero-title">PLN SUTM <span>Predictive Maintenance</span> System</div>
-            <div class="hero-subtitle">{data['total']:,} UNIQUE UTILITY POLES DETECTED · {data['total_inspections']:,} HISTORICAL INSPECTION LOGS RENDERED INSTANTLY</div>
+            <div class="hero-title">{TR['title']}</div>
+            <div class="hero-subtitle">{data['total']:,} {TR['subtitle']}</div>
         </div>
         <img src="{PLN_LOGO_URL}" class="hero-logo-embed">
     </div>
     """, unsafe_allow_html=True)
 
     COLORS_DICT = {"CRITICAL": "#ff3355", "HIGH": "#ff8c00", "MEDIUM": "#005A9C", "LOW": "#00a896"}
+    paper_bg = "#ffffff" if is_light else "#0b1329"
+    plot_bg = "#f8fafc" if is_light else "#030712"
+    text_color = "#0f172a" if is_light else "#f8fafc"
     
     def apply_pln_layout(fig, title_text):
         fig.update_layout(
-            title=dict(text=title_text, font=dict(family="Rajdhani", size=16, color="#f8fafc")),
-            paper_bgcolor="#0b1329", plot_bgcolor="#030712",
-            font=dict(color="#f8fafc", family="Inter"),
+            title=dict(text=title_text, font=dict(family="Rajdhani", size=16, color=text_color)),
+            paper_bgcolor=paper_bg, plot_bgcolor=plot_bg,
+            font=dict(color=text_color, family="Inter"),
             margin=dict(l=15, r=15, t=45, b=15),
-            xaxis=dict(gridcolor="rgba(255,255,255,0.03)", zeroline=False),
-            yaxis=dict(gridcolor="rgba(255,255,255,0.03)", zeroline=False)
+            xaxis=dict(gridcolor="rgba(0,0,0,0.05)" if is_light else "rgba(255,255,255,0.03)", zeroline=False),
+            yaxis=dict(gridcolor="rgba(0,0,0,0.05)" if is_light else "rgba(255,255,255,0.03)", zeroline=False)
         )
         return fig
 
-    # ──────────────────────────────────────────────────────
     # PAGE 1: OVERVIEW
-    # ──────────────────────────────────────────────────────
-    if active_page == "Overview Dashboard":
+    if active_page == "p1":
         st.markdown(f"""
         <div class="kpi-grid">
-            <div class="kpi-card kpi-total"><div class="kpi-label">TOTAL FLEET ASSETS</div><div class="kpi-value">{data['total']:,}</div></div>
-            <div class="kpi-card kpi-critical"><div class="kpi-label">🔴 CRITICAL RISK</div><div class="kpi-value">{data['n_crit']:,}</div></div>
-            <div class="kpi-card kpi-high"><div class="kpi-label">🟠 HIGH RISK</div><div class="kpi-value">{data['n_high']:,}</div></div>
-            <div class="kpi-card kpi-medium"><div class="kpi-label">🔵 MEDIUM RISK</div><div class="kpi-value">{data['n_med']:,}</div></div>
-            <div class="kpi-card kpi-low"><div class="kpi-label">🟢 LOW RISK</div><div class="kpi-value">{data['n_low']:,}</div></div>
+            <div class="kpi-card kpi-total"><div class="kpi-label">{TR['total_assets']}</div><div class="kpi-value">{data['total']:,}</div></div>
+            <div class="kpi-card kpi-critical"><div class="kpi-label">{TR['crit_risk']}</div><div class="kpi-value">{data['n_crit']:,}</div></div>
+            <div class="kpi-card kpi-high"><div class="kpi-label">{TR['high_risk']}</div><div class="kpi-value">{data['n_high']:,}</div></div>
+            <div class="kpi-card kpi-medium"><div class="kpi-label">{TR['med_risk']}</div><div class="kpi-value">{data['n_med']:,}</div></div>
+            <div class="kpi-card kpi-low"><div class="kpi-label">{TR['low_risk']}</div><div class="kpi-value">{data['n_low']:,}</div></div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -345,10 +330,8 @@ else:
             fig2 = px.histogram(data['df'], x="ULP", color="RISK_CLASS", barmode="stack", color_discrete_map=COLORS_DICT)
             st.plotly_chart(apply_pln_layout(fig2, "ULP Management Risk Infiltration Breakdown"), use_container_width=True)
 
-    # ──────────────────────────────────────────────────────
     # PAGE 2: RISK CLASSIFICATION
-    # ──────────────────────────────────────────────────────
-    elif active_page == "Risk Classification":
+    elif active_page == "p2":
         c1, c2 = st.columns(2)
         with c1:
             fig = px.box(data['df'], x="RISK_CLASS", y="RISK_SCORE", color="RISK_CLASS", color_discrete_map=COLORS_DICT)
@@ -357,24 +340,20 @@ else:
             fig2 = px.density_heatmap(data['df'], x="ULP", y="RISK_CLASS", z="RISK_SCORE", histfunc="avg", color_continuous_scale=["#0b1329", "#005A9C", "#FFD600"])
             st.plotly_chart(apply_pln_layout(fig2, "Density Risk Heatmap Intersections"), use_container_width=True)
 
-    # ──────────────────────────────────────────────────────
     # PAGE 3: COMPONENT HEALTH INDEX
-    # ──────────────────────────────────────────────────────
-    elif active_page == "Component Health Index":
+    elif active_page == "p3":
         if data['hi_stats']:
             hidf = pd.DataFrame(data['hi_stats'])
             fig = px.bar(hidf, x="Component", y=["BAIK", "CUKUP", "KURANG", "BURUK"], color_discrete_sequence=["#00a896", "#005A9C", "#ff8c00", "#ff3355"])
             st.plotly_chart(apply_pln_layout(fig, "Structural Component Failure Risk Stack"), use_container_width=True)
             st.dataframe(hidf.set_index("Component"), use_container_width=True)
 
-    # ──────────────────────────────────────────────────────
     # PAGE 4: HOTSPOT THERMOGRAPHY
-    # ──────────────────────────────────────────────────────
-    elif active_page == "Hotspot Thermography":
+    elif active_page == "p4":
         if not data['t2_raw'].empty:
             c1, c2 = st.columns(2)
             with c1:
-                fig = px.histogram(data['t2_raw'], x="DELTA_SUHU", color_discrete_sequence=["#FFD600"])
+                fig = px.histogram(data['t2_raw'], x="DELTA_SUHU", color_discrete_sequence=["#005A9C"])
                 st.plotly_chart(apply_pln_layout(fig, "Infrared Thermal Anomalies Distribution"), use_container_width=True)
             with c2:
                 fig2 = px.scatter(data['t2_raw'], x="SUHU FASA R", y="DELTA_SUHU", color="ULP")
@@ -382,52 +361,41 @@ else:
         else:
             st.info("ℹ️ Thermography data registers currently clear.")
 
-    # ──────────────────────────────────────────────────────
     # PAGE 5: PREDICTIVE ML COMPARISON
-    # ──────────────────────────────────────────────────────
-    elif active_page == "Predictive ML Comparison":
+    elif active_page == "p5":
         categories = ['Accuracy','Precision','Recall','F1-Score','ROC-AUC']
         fig = go.Figure()
-        fig.add_trace(go.Scatterpolar(r=[0.95, 0.94, 0.96, 0.95, 0.98], theta=categories, fill='toself', name='XGBoost Engine (Core V6)', line_color="#FFD600"))
+        fig.add_trace(go.Scatterpolar(r=[0.95, 0.94, 0.96, 0.95, 0.98], theta=categories, fill='toself', name='XGBoost Engine', line_color="#FFD600"))
         fig.add_trace(go.Scatterpolar(r=[0.87, 0.85, 0.88, 0.86, 0.90], theta=categories, fill='toself', name='Random Forest Baseline', line_color="#005A9C"))
         st.plotly_chart(apply_pln_layout(fig, "Algorithmic Efficiency Evaluation Matrix"), use_container_width=True)
 
-    # ──────────────────────────────────────────────────────
     # PAGE 6: PRIORITY POLES LIST
-    # ──────────────────────────────────────────────────────
-    elif active_page == "Priority Poles List":
-        st.markdown("### 🎯 Top Critical Risk Poles Requiring Immediate Field Operations")
+    elif active_page == "p6":
         p_df = data['df'].sort_values(by="RISK_SCORE", ascending=False).head(100)
         st.dataframe(p_df[["TIANG_ID", "ULP", "PENYULANG", "NO TIANG", "RISK_CLASS", "RISK_SCORE"]].set_index("TIANG_ID"), use_container_width=True)
 
-    # ──────────────────────────────────────────────────────
     # PAGE 7: EXECUTIVE SUMMARY
-    # ──────────────────────────────────────────────────────
-    elif active_page == "Executive Summary":
+    elif active_page == "p7":
         m1, m2 = st.columns([1, 2])
         with m1:
             st.markdown(f"""
             <div class="kpi-card" style="text-align:center; margin-bottom:20px;">
-                <div style="font-size:14px; color:var(--clr-teal); font-family:var(--font-mono)">GLOBAL HEALTH SCORE</div>
-                <div style="font-family:var(--font-display); font-size:60px; font-weight:700; color:#ffffff;">{data['health_score']:.1f}<span style="font-size:20px;color:var(--clr-muted)">/100</span></div>
+                <div style="font-size:14px; color:var(--clr-teal); font-family:var(--font-mono)">{TR['health_label']}</div>
+                <div style="font-family:var(--font-display); font-size:60px; font-weight:700; color:var(--clr-text);">{data['health_score']:.1f}<span style="font-size:20px;color:var(--clr-muted)">/100</span></div>
             </div>
             """, unsafe_allow_html=True)
             
-            st.markdown("### 🧠 AI Core System Insights")
+            st.markdown(f"### {TR['insights_title']}")
             worst_ulp = data['df'][data['df']["RISK_CLASS"]=="CRITICAL"]["ULP"].mode().iloc[0] if not data['df'][data['df']["RISK_CLASS"]=="CRITICAL"].empty else "None"
             st.markdown(f"""
-            <div class="insight-card critical">
-                <div style="font-weight:600; margin-bottom:4px; color:#ffffff;">CRITICAL INTENSITY CLUSTER: {worst_ulp}</div>
-                <div style="font-size:13px; color:#94a3b8;">ULP {worst_ulp} contains the dense localized cluster of high asset wear. Action plan suggested within 7 days.</div>
-            </div>
-            <div class="insight-card high">
-                <div style="font-weight:600; margin-bottom:4px; color:#ffffff;">SYSTEM RISK EXPOSURE</div>
-                <div style="font-size:13px; color:#94a3b8;">High and critical poles encompass {((data['n_crit']+data['n_high'])/data['total']*100):.1f}% of overall network architecture.</div>
+            <div class="insight-card">
+                <div style="font-weight:600; margin-bottom:4px;">CRITICAL INTENSITY CLUSTER: {worst_ulp}</div>
+                <div style="font-size:13px; color:var(--clr-muted);">ULP {worst_ulp} contains the dense localized cluster of high asset wear.</div>
             </div>
             """, unsafe_allow_html=True)
             
         with m2:
-            st.markdown("### 🎯 Maintenance Priority Rank Matrix by Branch ULP")
+            st.markdown(f"### {TR['matrix_title']}")
             ulp_sum = data['df'].groupby("ULP").agg(TOTAL=("TIANG_ID","count"), CRITICAL=("RISK_CLASS", lambda x: (x=="CRITICAL").sum()), HIGH=("RISK_CLASS", lambda x: (x=="HIGH").sum())).reset_index()
             ulp_sum["RATIO"] = ((ulp_sum["CRITICAL"] + ulp_sum["HIGH"]) / ulp_sum["TOTAL"] * 100).round(1)
             ulp_sum = ulp_sum.sort_values(by="RATIO", ascending=False).head(6)
@@ -435,8 +403,8 @@ else:
             for _, row in ulp_sum.iterrows():
                 st.markdown(f"""
                 <div class="priority-item">
-                    <div style="font-weight:600; font-size:15px;">{row['ULP']} <span style="float:right; color:var(--clr-yellow);">{row['RATIO']}% Risk</span></div>
-                    <div style="font-size:11px; color:var(--clr-muted); font-family:var(--font-mono); margin-top:3px;">{int(row['CRITICAL'])} CRITICAL · {int(row['HIGH'])} HIGH ACTIVE ANOMALIES</div>
-                    <div class="priority-bar"><div style="height:100%; width:{row['RATIO']}%; background:linear-gradient(90deg, var(--clr-accent), var(--clr-yellow)); border-radius:3px;"></div></div>
+                    <div style="font-weight:600; font-size:15px;">{row['ULP']} <span style="float:right; color:var(--clr-accent);">{row['RATIO']}% Risk</span></div>
+                    <div style="font-size:11px; color:var(--clr-muted); font-family:var(--font-mono); margin-top:3px;">{int(row['CRITICAL'])} CRITICAL · {int(row['HIGH'])} HIGH</div>
+                    <div class="priority-bar"><div style="height:100%; width:{row['RATIO']}%; background:var(--clr-accent); border-radius:3px;"></div></div>
                 </div>
                 """, unsafe_allow_html=True)
