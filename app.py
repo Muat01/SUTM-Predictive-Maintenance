@@ -14,60 +14,214 @@ import time
 st.markdown("""
 <style>
 .hero-container{
-    background: linear-gradient(135deg,#111827 0%,#0f172a 50%,#020617 100%);
+    background:linear-gradient(
+        135deg,
+        #111827 0%,
+        #0f172a 45%,
+        #020617 100%
+    );
+
     border:1px solid rgba(255,255,255,0.08);
-    border-radius:24px;
-    padding:32px;
-    margin-bottom:24px;
+    border-radius:28px;
+
+    padding:34px;
+    margin-bottom:28px;
+
     position:relative;
     overflow:hidden;
+
+    box-shadow:
+        0 0 40px rgba(59,130,246,0.08),
+        0 0 80px rgba(59,130,246,0.04);
 }
 
+/* Glow Effect */
 .hero-container::before{
     content:'';
+
     position:absolute;
-    width:400px;
-    height:400px;
-    background:radial-gradient(circle,#3b82f633 0%,transparent 70%);
+
+    width:420px;
+    height:420px;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(59,130,246,0.22) 0%,
+            transparent 70%
+        );
+
     top:-180px;
     right:-120px;
+
+    pointer-events:none;
 }
 
+/* Layout */
+.hero-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:24px;
+
+    position:relative;
+    z-index:2;
+}
+
+/* Badge */
+.hero-badge{
+    display:inline-block;
+
+    background:rgba(16,185,129,0.12);
+
+    color:#10b981;
+
+    border:1px solid rgba(16,185,129,0.25);
+
+    padding:8px 16px;
+
+    border-radius:999px;
+
+    font-size:14px;
+    font-weight:600;
+
+    margin-right:10px;
+    margin-bottom:18px;
+
+    backdrop-filter:blur(10px);
+}
+
+/* Live Badge */
+.hero-live{
+    display:inline-block;
+
+    background:rgba(59,130,246,0.12);
+
+    color:#60a5fa;
+
+    border:1px solid rgba(59,130,246,0.25);
+
+    padding:8px 16px;
+
+    border-radius:999px;
+
+    font-size:14px;
+    font-weight:600;
+
+    margin-bottom:18px;
+
+    backdrop-filter:blur(10px);
+}
+
+/* Main Title */
 .hero-title{
-    font-size:52px;
+    font-size:54px;
     font-weight:800;
-    line-height:1.1;
+
+    line-height:1.05;
+
     color:white;
+
+    margin-bottom:14px;
+
+    letter-spacing:-1px;
+}
+
+/* Subtitle */
+.hero-subtitle{
+    font-size:18px;
+
+    color:#94a3b8;
+
+    line-height:1.7;
+
+    max-width:760px;
+}
+
+/* Status Card */
+.hero-status-card{
+    background:rgba(255,255,255,0.04);
+
+    border:1px solid rgba(255,255,255,0.08);
+
+    padding:22px 24px;
+
+    border-radius:20px;
+
+    min-width:260px;
+
+    backdrop-filter:blur(12px);
+
+    box-shadow:
+        0 0 30px rgba(255,255,255,0.03);
+}
+
+/* Labels */
+.hero-status-label{
+    color:#94a3b8;
+
+    font-size:13px;
+
+    margin-bottom:10px;
+
+    letter-spacing:0.5px;
+}
+
+/* Operational Status */
+.hero-status-live{
+    color:#10b981;
+
+    font-size:24px;
+    font-weight:700;
+
     margin-bottom:12px;
 }
 
-.hero-subtitle{
-    font-size:18px;
+/* Small Text */
+.hero-status-small{
     color:#94a3b8;
-    margin-bottom:24px;
+
+    font-size:13px;
 }
 
-.hero-badge{
-    display:inline-block;
-    background:rgba(16,185,129,0.15);
-    color:#10b981;
-    border:1px solid rgba(16,185,129,0.25);
-    padding:8px 16px;
-    border-radius:999px;
-    font-size:14px;
+/* Value Text */
+.hero-status-value{
+    color:white;
+
+    font-size:15px;
     font-weight:600;
-    margin-right:12px;
+
+    margin-top:4px;
 }
 
-.hero-live{
-    display:inline-block;
-    background:rgba(59,130,246,0.15);
-    color:#60a5fa;
-    border:1px solid rgba(59,130,246,0.25);
-    padding:8px 16px;
-    border-radius:999px;
-    font-size:14px;
-    font-weight:600;
+/* Asset Count */
+.hero-assets{
+    color:white;
+
+    font-size:34px;
+    font-weight:800;
+
+    margin-top:6px;
+
+    letter-spacing:-1px;
+}
+
+/* Mobile Responsive */
+@media(max-width:768px){
+
+    .hero-title{
+        font-size:38px;
+    }
+
+    .hero-subtitle{
+        font-size:15px;
+    }
+
+    .hero-status-card{
+        width:100%;
+    }
+
 }
 </style>
 """, unsafe_allow_html=True)
@@ -291,35 +445,65 @@ last_update = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
 if page == "📊 Overview":
 
     # ── HERO SECTION ─────────────────────────────────────────────
-    st.markdown(f"""
-    <div class="hero-container">
+st.markdown(f"""
+<div class="hero-container">
 
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div class="hero-top">
 
-            <div>
+        <div>
 
-                <div class="hero-badge">
-                    ⚡ AI Monitoring Active
-                </div>
-
-                <div class="hero-live">
-                    ● LIVE SYSTEM
-                </div>
-
-                <div class="hero-title">
-                    Predictive Maintenance Platform
-                </div>
-
-                <div class="hero-subtitle">
-                    Real-Time SUTM Asset Intelligence & Risk Monitoring System
-                    <br>
-                    PT PLN UP3 Bandung · Industrial AI Analytics
-                </div>
-
+            <div class="hero-badge">
+                ⚡ AI Monitoring Active
             </div>
 
+            <div class="hero-live">
+                ● LIVE SYSTEM
+            </div>
+
+            <div class="hero-title">
+                Predictive Maintenance Platform
+            </div>
+
+            <div class="hero-subtitle">
+                Real-Time SUTM Asset Intelligence & Risk Monitoring System
+                <br>
+                PT PLN UP3 Bandung · Industrial AI Analytics
+            </div>
+
+        </div>
+
+        <div class="hero-status-card">
+
+            <div class="hero-status-label">
+                SYSTEM STATUS
+            </div>
+
+            <div class="hero-status-live">
+                ● Operational
+            </div>
+
+            <div class="hero-status-small">
+                Last Update
+            </div>
+
+            <div class="hero-status-value">
+                {last_update}
+            </div>
+
+            <div class="hero-status-small" style="margin-top:14px;">
+                Connected Assets
+            </div>
+
+            <div class="hero-assets">
+                {total:,}
+            </div>
+
+        </div>
+
     </div>
-    """, unsafe_allow_html=True)
+
+</div>
+""", unsafe_allow_html=True)
 
     # KPIs
     c1, c2, c3, c4, c5 = st.columns(5)
