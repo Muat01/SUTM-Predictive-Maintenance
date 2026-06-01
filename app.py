@@ -22,7 +22,7 @@ st.set_page_config(
 # Core Cloud System References
 T1_FILE_ID = "1FegD5m87H-kT-GgkNyS6xLMyW9UJa2Sa"
 T2_FILE_ID = "11lllTP3-mzDG4KOEVyJX6RaDc1n8bTbq"
-PLN_LOGO_URL = "https://i.ibb.co/V9VnZ55N/Logo-PLN-Indonesia-Power-Services.png"
+PLN_LOGO_URL = "https://www.plnipservices.co.id/storage//filemanager/Customer/Logo%20PLN.png"
 
 # ══════════════════════════════════════════════════════════════
 # 2. ENHANCED SYSTEM STYLING (PRODUCTION-GRADE CSS)
