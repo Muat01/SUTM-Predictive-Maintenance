@@ -10,7 +10,6 @@ from googleapiclient.http import MediaIoBaseDownload
 import io
 import time
 
-```python
 # ── HERO SECTION ─────────────────────────────────────────────
 st.markdown(f"""
 <div class="hero-container">
@@ -86,7 +85,6 @@ st.markdown(f"""
 
 </div>
 """, unsafe_allow_html=True)
-```
 
 # ── CUSTOM CSS ───────────────────────────────────────────────
 st.markdown("""
