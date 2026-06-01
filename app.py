@@ -141,12 +141,8 @@ def load_data(t1_path: str, t2_path: str):
     """Load and process SUTM inspection data."""
 
     # ── Load raw files ────────────────────────────────────────────────────
-    T1_FILE_ID = "1FegD5m87H-kT-GgkNyS6xLMyW9UJa2Sa"
-    T2_FILE_ID = "11lllTP3-mzDG4KOEVyJX6RaDc1n8bTbq"
-    
-    # Initialize Session States for Language and Theme (To prevent disappearing elements)
-    if "lang_mode" not in st.session_state:
-        st.session_state.lang_mode = "English"
+    t1 = pd.read_excel(t1_path, sheet_name='DATA')
+    t2 = pd.read_excel(t2_path, sheet_name='DATA')
 
     # ── HI conversion ────────────────────────────────────────────────────
     def hi_from_text(val):
