@@ -25,14 +25,32 @@ T2_FILE_ID = "11lllTP3-mzDG4KOEVyJX6RaDc1n8bTbq"
 PLN_LOGO_URL = "https://i.ibb.co/V9VnZ55N/Logo-PLN-Indonesia-Power-Services.png"
 
 # ══════════════════════════════════════════════════════════════
-# 2. CONFIG BAR IN UPPER HUD (أزرار التحكم باللغة والوضع العلوي)
+# 2. SIDEBAR CONTROLS (أزرار التحكم بالمظهر واللغة أعلى الشريط الجانبي)
 # ══════════════════════════════════════════════════════════════
-hud_col1, hud_col2 = st.columns([4, 1])
-
-with hud_col2:
-    with st.popover("⚙️ Settings / الإعدادات", use_container_width=True):
-        theme_choice = st.radio("🎨 Theme / المظهر", ["Dark Mode 🌙", "Light Mode ☀️"], horizontal=True)
-        lang_choice = st.selectbox("🌐 Language / اللغة", ["العربية", "English", "Bahasa Indonesia"])
+with st.sidebar:
+    st.markdown(f"""
+    <div style="text-align: center; padding-top: 20px;">
+        <img src="{PLN_LOGO_URL}" style="width: 100%; max-width: 190px; height: auto; object-fit: contain;">
+        <div style="font-family: 'Rajdhani', sans-serif; font-size: 10px; color: #005A9C; letter-spacing: 2px; margin-top: 8px; font-weight: bold;">
+            PREDICTIVE MAINTENANCE SYSTEM
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("<hr style='margin: 15px 0; border-color: rgba(0, 90, 156, 0.15);'>", unsafe_allow_html=True)
+    
+    # عناصر التحكم مجمعة بشكل أنيق داخل الـ Sidebar
+    theme_choice = st.segmented_control(
+        "🎨 Mode / المظهر",
+        options=["Dark Mode 🌙", "Light Mode ☀️"],
+        default="Dark Mode 🌙"
+    )
+    
+    lang_choice = st.selectbox(
+        "🌐 Language / اللغة", 
+        ["العربية", "English", "Bahasa Indonesia"],
+        index=0
+    )
 
 # قاموس الترجمة الفوري ذو الاستجابة اللحظية لحماية السرعة
 TRANSLATIONS = {
@@ -78,17 +96,17 @@ TRANSLATIONS = {
 }
 
 TR = TRANSLATIONS[lang_choice]
-is_light = "Light" in theme_choice
+is_light = "Light" in str(theme_choice)
 
 # ══════════════════════════════════════════════════════════════
-# 3. DYNAMIC THEME CSS SYSTEM (التبديل اللحظي بين الفاتح والمظلم)
+# 3. DYNAMIC THEME CSS SYSTEM (حقن الألوان الديناميكية ومكافحة الأخطاء)
 # ══════════════════════════════════════════════════════════════
 bg_base = "#f8fafc" if is_light else "#030712"
 bg_card = "#ffffff" if is_light else "#0b1329"
 bg_sidebar = "#f1f5f9" if is_light else "#01040a"
-clr-text = "#0f172a" if is_light else "#f8fafc"
-clr-muted = "#64748b"
-clr-border = "rgba(0, 90, 156, 0.15)" if is_light else "rgba(0, 90, 156, 0.25)"
+clr_text = "#0f172a" if is_light else "#f8fafc"
+clr_muted = "#64748b"
+clr_border = "rgba(0, 90, 156, 0.15)" if is_light else "rgba(0, 90, 156, 0.25)"
 hero_gradient = "linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)" if is_light else "linear-gradient(135deg, #0b1329 0%, #00253e 100%)"
 hero_title_clr = "#0f172a" if is_light else "#ffffff"
 
@@ -107,9 +125,9 @@ st.markdown(f"""
     --clr-accent:    #005A9C;
     --clr-yellow:    #FFD600;
     --clr-teal:      #00A3A6;
-    --clr-text:      {clr-text};
-    --clr-muted:     {clr-muted};
-    --clr-border:    {clr-border};
+    --clr-text:      {clr_text};
+    --clr-muted:     {clr_muted};
+    --clr-border:    {clr_border};
     --font-display:  'Rajdhani', sans-serif;
     --font-mono:     'JetBrains Mono', monospace;
     --font-body:     'Inter', sans-serif;
@@ -122,37 +140,28 @@ html, body, .stApp {{ background-color: var(--bg-base) !important; color: var(--
 .stDeployButton {{ display: none; }}
 [data-testid="stToolbar"] {{ display: none; }}
 
-/* Sidebar Design styling */
+/* Sidebar Container layout */
 [data-testid="stSidebar"] {{
     background: var(--bg-sidebar) !important;
     border-right: 2px solid var(--clr-border);
 }}
-[data-testid="stSidebar"] > div {{ padding: 0 !important; }}
 
-.sidebar-header {{
-    padding: 30px 20px 20px;
-    border-bottom: 1px solid var(--clr-border);
-    text-align: center;
-}}
-.sidebar-logo-img {{ width: 100%; max-width: 190px; height: auto; object-fit: contain; }}
-.pln-sub-text {{ font-family: var(--font-mono); font-size: 9px; color: var(--clr-accent); letter-spacing: 2px; text-transform: uppercase; margin-top: 10px; }}
+.nav-section-title {{ font-family: var(--font-mono); font-size: 10px; color: var(--clr-muted); letter-spacing: 2px; text-transform: uppercase; padding: 20px 10px 8px; }}
 
-.nav-section-title {{ font-family: var(--font-mono); font-size: 10px; color: var(--clr-muted); letter-spacing: 2px; text-transform: uppercase; padding: 25px 20px 8px; }}
-
-/* Hero Wrapper config */
+/* Hero Widget config */
 .hero-wrapper {{
     background: {hero_gradient};
     border-left: 5px solid var(--clr-accent);
     border-right: 1px solid var(--clr-border); border-top: 1px solid var(--clr-border); border-bottom: 1px solid var(--clr-border);
-    border-radius: 12px; padding: 30px; margin-bottom: 25px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;
+    border-radius: 12px; padding: 25px; margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center;
 }}
-.hero-title {{ font-family: var(--font-display); font-size: 38px; font-weight: 700; line-height: 1.1; color: {hero_title_clr}; margin: 0 0 6px 0; }}
+.hero-title {{ font-family: var(--font-display); font-size: 36px; font-weight: 700; line-height: 1.1; color: {hero_title_clr}; margin: 0 0 6px 0; }}
 .hero-title span {{ color: var(--clr-accent); }}
-.hero-subtitle {{ font-size: 13.5px; color: var(--clr-muted); font-family: var(--font-mono); }}
-.hero-logo-embed {{ height: 60px; object-fit: contain; margin-left: 20px; }}
+.hero-subtitle {{ font-size: 13px; color: var(--clr-muted); font-family: var(--font-mono); }}
+.hero-logo-embed {{ height: 55px; object-fit: contain; margin-left: 20px; }}
 
-/* KPI Cards architecture */
+/* KPI Matrix grid cards */
 .kpi-grid {{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 25px; }}
 .kpi-card {{ background: var(--bg-card); border-radius: 12px; padding: 20px 16px; border: 1px solid var(--clr-border); position: relative; overflow: hidden; }}
 .kpi-card::before {{ content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }}
@@ -262,28 +271,21 @@ if st.session_state.master_payload is None:
 data = st.session_state.master_payload
 
 # ══════════════════════════════════════════════════════════════
-# 5. SIDEBAR NAVIGATION BRANDING (ربط لغات الواجهة بالقائمة)
+# 5. SIDEBAR ROUTER PANEL (قائمة التصفح داخل الشريط الجانبي)
 # ══════════════════════════════════════════════════════════════
 with st.sidebar:
-    st.markdown(f"""
-    <div class="sidebar-header">
-        <img src="{PLN_LOGO_URL}" class="sidebar-logo-img">
-        <div class="pln-sub-text">PREDICTIVE MAINTENANCE SYSTEM</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
     st.markdown(f'<div class="nav-section-title">{TR["nav_title"]}</div>', unsafe_allow_html=True)
     PAGES_MAP = {TR["p1"]: "p1", TR["p2"]: "p2", TR["p3"]: "p3", TR["p4"]: "p4", TR["p5"]: "p5", TR["p6"]: "p6", TR["p7"]: "p7"}
     active_page_localized = st.selectbox("Navigation Router", list(PAGES_MAP.keys()), label_visibility="collapsed")
     active_page = PAGES_MAP[active_page_localized]
 
 # ══════════════════════════════════════════════════════════════
-# 6. APP RENDERING WORKSPACE
+# 6. MAIN APP SPACE
 # ══════════════════════════════════════════════════════════════
 if data is None:
     st.error("❌ Failed to establish cloud database syncing.")
 else:
-    # طباعة كود واجهة العرض مترجمة لحظياً بحسب اختيار المدير
+    # طباعة كود واجهة العرض مترجمة لحظياً
     st.markdown(f"""
     <div class="hero-wrapper">
         <div class="hero-content">
@@ -297,13 +299,12 @@ else:
     COLORS_DICT = {"CRITICAL": "#ff3355", "HIGH": "#ff8c00", "MEDIUM": "#005A9C", "LOW": "#00a896"}
     paper_bg = "#ffffff" if is_light else "#0b1329"
     plot_bg = "#f8fafc" if is_light else "#030712"
-    text_color = "#0f172a" if is_light else "#f8fafc"
     
     def apply_pln_layout(fig, title_text):
         fig.update_layout(
-            title=dict(text=title_text, font=dict(family="Rajdhani", size=16, color=text_color)),
+            title=dict(text=title_text, font=dict(family="Rajdhani", size=16, color=clr_text)),
             paper_bgcolor=paper_bg, plot_bgcolor=plot_bg,
-            font=dict(color=text_color, family="Inter"),
+            font=dict(color=clr_text, family="Inter"),
             margin=dict(l=15, r=15, t=45, b=15),
             xaxis=dict(gridcolor="rgba(0,0,0,0.05)" if is_light else "rgba(255,255,255,0.03)", zeroline=False),
             yaxis=dict(gridcolor="rgba(0,0,0,0.05)" if is_light else "rgba(255,255,255,0.03)", zeroline=False)
