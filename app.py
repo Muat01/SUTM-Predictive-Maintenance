@@ -318,8 +318,6 @@ if page == "📊 Overview":
 
             </div>
 
-        </div>
-
     </div>
     """, unsafe_allow_html=True)
 
