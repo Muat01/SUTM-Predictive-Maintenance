@@ -1,6 +1,7 @@
 """
 Predictive Maintenance SUTM Dashboard
 PT PLN UP3 Bandung — 2026
+Automated Google Drive Integration Sync Enabled
 Run: streamlit run app.py
 """
 
@@ -11,7 +12,11 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import os
+import io
 from datetime import datetime
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
 
 # ─── PAGE CONFIG ────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -126,27 +131,49 @@ COND_COLS = [
     'KONDISI PENGIKAT','KONDISI ISOLATOR TUMPU','KONDISI ISOLATOR AFSPAN',
     'KONDISI ARRESTER','KONDISI FCO'
 ]
-COMP_LABELS = {
-    'KONDISI TIANG':'Tiang (Pole)',
-    'KONDISI EKSTENSI':'Ekstensi',
-    'KONDISI TRAVERS':'Travers',
-    'KONDISI GSW':'GSW',
-    'KONDISI PENYANGGA TIANG':'Penyangga',
-    'KONDISI PENAMPANG':'Penampang',
-    'KONDISI JUMPER':'Jumper',
-    'KONDISI PENGIKAT':'Pengikat',
-    'KONDISI ISOLATOR TUMPU':'Isolator Tumpu',
-    'KONDISI ISOLATOR AFSPAN':'Isolator Afspan',
-    'KONDISI ARRESTER':'Arrester',
-    'KONDISI FCO':'FCO',
-}
 HI_MAP = {'BAIK':3,'CUKUP':2,'KURANG':1,'BURUK':0}
 
-# ─── DATA LOADING ─────────────────────────────────────────────────────────────
+# 🔗 GOOGLE DRIVE TARGET IDs (معرّفات ملفاتك الأصلية)
+T1_FILE_ID = "1FegD5m87H-kT-GgkNyS6xLMyW9UJa2Sa"
+T2_FILE_ID = "11lllTP3-mzDG4KOEVyJX6RaDc1n8bTbq"
+
+# ─── GOOGLE DRIVE SYNC PIPELINE ──────────────────────────────────────────────
+def download_excel_from_drive(file_id: str, creds_path: str = "service_account.json"):
+    """يفحص بيانات الاعتماد ويسحب الملف من الجوجل درايف مباشرة إلى الذاكرة"""
+    try:
+        # المحاولة الأولى: استخدام ملف محلي service_account.json
+        if os.path.exists(creds_path):
+            creds = service_account.Credentials.from_service_account_file(
+                creds_path, scopes=["https://www.googleapis.com/auth/drive.readonly"]
+            )
+        # المحاولة الثانية: استخدام Streamlit Secrets إذا كان مرفعاً سحابياً
+        elif "google_service_account" in st.secrets:
+            creds = service_account.Credentials.from_service_account_info(
+                st.secrets["google_service_account"], scopes=["https://www.googleapis.com/auth/drive.readonly"]
+            )
+        else:
+            raise Exception("Google Credentials Not Found! Check local json or st.secrets")
+
+        drive_service = build("drive", "v3", credentials=creds)
+        request = drive_service.files().get_media(fileId=file_id)
+        
+        file_buffer = io.BytesIO()
+        downloader = MediaIoBaseDownload(file_buffer, request)
+        done = False
+        while not done:
+            status, done = downloader.next_chunk()
+        
+        file_buffer.seek(0)
+        return file_buffer
+    except Exception as e:
+        st.sidebar.error(f"⚠️ Drive Sync Error: {e}")
+        return None
+
+# ─── DATA LOADING & CALCULATION ENGINE ───────────────────────────────────────
 @st.cache_data(ttl=30)
-def load_data(t1_path: str, t2_path: str):
-    t1 = pd.read_excel(t1_path, sheet_name='DATA')
-    t2 = pd.read_excel(t2_path, sheet_name='DATA')
+def load_data_from_stream(t1_buffer, t2_buffer):
+    t1 = pd.read_excel(t1_buffer, sheet_name='DATA')
+    t2 = pd.read_excel(t2_buffer, sheet_name='DATA')
 
     def hi_from_text(val):
         if pd.isna(val) or str(val).strip().upper() in ['BLANK','TIDAK ADA','-','']: return 3
@@ -208,7 +235,7 @@ def load_data(t1_path: str, t2_path: str):
 
     return t1, t2, worst, hi_cols
 
-# ─── SIDEBAR ─────────────────────────────────────────────────────────────────
+# ─── SIDEBAR & CONNECTOR HUB ────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("""
     <div style="padding:8px 0 16px;">
@@ -219,39 +246,26 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.divider()
+    st.markdown('<div style="font-size:10px;font-family:\'DM Mono\',monospace;color:#4a5168;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">CONNECTION STATUS</div>', unsafe_allow_html=True)
+    
+    st.info("🔄 Synced Mode: Live Google Drive Integration Activated.")
+    
+    # تحميل الملفات من جوجل درايف تلقائياً إلى الذاكرة
+    t1_stream = download_excel_from_drive(T1_FILE_ID)
+    t2_stream = download_excel_from_drive(T2_FILE_ID)
 
-    st.markdown('<div style="font-size:10px;font-family:\'DM Mono\',monospace;color:#4a5168;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">DATA SOURCE</div>', unsafe_allow_html=True)
-
-    use_upload = st.toggle("Upload new Excel files", value=False)
-
-    if use_upload:
-        t1_file = st.file_uploader("SUTMT1 (Visual)", type=['xlsx'], key='t1')
-        t2_file = st.file_uploader("SUTMT2 (Thermal)", type=['xlsx'], key='t2')
-
-        if t1_file and t2_file:
-            t1_path = f"/tmp/SUTM_T1_{t1_file.name}"
-            t2_path = f"/tmp/SUTM_T2_{t2_file.name}"
-            with open(t1_path, 'wb') as f: f.write(t1_file.read())
-            with open(t2_path, 'wb') as f: f.write(t2_file.read())
-            st.success("✓ Files loaded!")
-        else:
-            st.info("Upload both files to continue")
-            st.stop()
+    if t1_stream is None or t2_stream is None:
+        st.warning("⚠️ Could not pull data from Drive. Please check your credentials or File IDs.")
+        st.stop()
     else:
-        t1_path = "1__INSPEKSI_SUTM_T1_2026.xlsx"
-        t2_path = "2__INSPEKSI_SUTM_T2_-_2026.xlsx"
-
-        # FIXED: Enhanced non-blocking error handling instead of hard st.stop()
-        if not (os.path.exists(t1_path) and os.path.exists(t2_path)):
-            st.warning("⚠️ Local Excel files not found in root directory. Please use the toggle above to upload data files manually.")
-            st.stop()
+        st.success("⚡ Connected to Live Data Feed Engine!")
 
     st.divider()
-    auto_refresh = st.toggle("Auto-refresh (30s)", value=False)
+    auto_refresh = st.toggle("Auto-refresh (30s)", value=True)
 
-# ─── DATA RESOLUTION ──────────────────────────────────────────────────────────
+# ─── RESOLVING PIPELINE DATA STRUCTURES ─────────────────────────────────────
 try:
-    t1_df, t2_df, df, hi_cols = load_data(t1_path, t2_path)
+    t1_df, t2_df, df, hi_cols = load_data_from_stream(t1_stream, t2_stream)
 except Exception as e:
     st.error(f"Error compiling active data matrices: {e}")
     st.stop()
@@ -273,7 +287,7 @@ with st.sidebar:
     sel_peny = st.selectbox("Penyulang", penyulang_opts)
 
     st.divider()
-    st.markdown(f'<div class="update-time">Last loaded:<br>{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="update-time">Last Sync Time:<br>{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</div>', unsafe_allow_html=True)
 
 # ─── FILTER EXECUTION ─────────────────────────────────────────────────────────
 filtered = df.copy()
@@ -292,7 +306,7 @@ st.markdown(f"""
     <div style="font-size:12px;color:#4a5168;margin-top:3px;font-weight:300;">PT PLN UP3 Bandung &nbsp;·&nbsp; {len(t1_df):,} visual records &nbsp;·&nbsp; {len(t2_df):,} thermal records</div>
   </div>
   <div style="text-align:right;">
-    <div style="font-size:9px;font-family:'DM Mono',monospace;color:#00d4aa;letter-spacing:1px;">● LIVE</div>
+    <div style="font-size:9px;font-family:'DM Mono',monospace;color:#00d4aa;letter-spacing:1px;">● LIVE CLOUD DATA FEED</div>
     <div style="font-size:10px;font-family:'DM Mono',monospace;color:#4a5168;margin-top:2px;">{datetime.now().strftime("%d %b %Y · %H:%M")}</div>
   </div>
 </div>
@@ -346,7 +360,6 @@ with tab1:
         st.plotly_chart(fig_donut, use_container_width=True)
 
     with col_b:
-        # FIXED: Clean ULP missing or empty string instances to ensure bar chart renders safely without grey screen
         clean_ulp_df = filtered.dropna(subset=['ULP'])
         clean_ulp_df = clean_ulp_df[clean_ulp_df['ULP'].astype(str).str.strip() != '']
         
@@ -367,18 +380,6 @@ with tab1:
                              category_orders={'RISK_CLASS':['LOW','MEDIUM','HIGH','CRITICAL']})
     fig_hist.update_layout(**PLOT_LAYOUT, height=260, xaxis_title='Risk Score', yaxis_title='Count of Poles')
     st.plotly_chart(fig_hist, use_container_width=True)
-
-    if 'BULAN' in t1_df.columns:
-        monthly = t1_df['BULAN'].value_counts().reset_index()
-        monthly.columns = ['Month','Records']
-        month_order = ['Jan 2026','Feb 2026','Mar 2026','Apr 2026']
-        monthly = monthly[monthly['Month'].isin(month_order)]
-        if not monthly.empty:
-            monthly['Month'] = pd.Categorical(monthly['Month'], categories=month_order, ordered=True)
-            monthly = monthly.sort_values('Month')
-            fig_month = px.bar(monthly, x='Month', y='Records', title='Monthly Inspection Volume (SUTMT1)', color='Records', color_continuous_scale=['#1c2230','#00d4aa'])
-            fig_month.update_layout(**PLOT_LAYOUT, height=240, coloraxis_showscale=False)
-            st.plotly_chart(fig_month, use_container_width=True)
 
 # ─── SCRIPT TO FORCE REFRESH IF ENABLED ─────────────────────────────────────
 if auto_refresh:
